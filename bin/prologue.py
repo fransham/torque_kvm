@@ -6,6 +6,16 @@
 # will boot a virtual machine for a job.
 #
 ##############################################
+import sys
+import commands
+import os
+import time
+import libvirt
+try:
+    import sqlite3
+except:
+    from pysqlite2 import dbapi2 as sqlite3
+
 
 # some parameters, hardcoded for now:
 imagefile = "/nfs/images/bbr-ltda-torque.qcow"
@@ -14,17 +24,6 @@ dirname = os.path.dirname( os.path.abspath(__file__) )
 dbfile=dirname + "/../var/network.db"
 lockfile=dirname + "/../var/db.lock"
 
-
-import sys
-import commands
-import os
-import time
-import libvirt
-
-try:
-    import sqlite3
-except:
-    from pysqlite2 import dbapi2 as sqlite3
 
 
 # prologue gets 3 arguments:
