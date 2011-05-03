@@ -18,7 +18,7 @@ except:
 
 
 # some parameters, hardcoded for now:
-imagefile = "/nfs/images/bbr-ltda-torque.qcow"
+imagefile = "/opt/nimbus/var/workspace-control/images/bbr-ltda.qcow2"
 vmrundir = "/scratch/secureimages"
 dirname = os.path.dirname( os.path.abspath(__file__) )
 dbfile=dirname + "/../var/network.db"
