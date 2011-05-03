@@ -11,6 +11,8 @@
 import libvirt
 import smtplib
 import os
+import sys
+
 try:
     import sqlite3
 except:
@@ -27,8 +29,8 @@ dbfile=dirname + "/../var/network.db"
 # 2 -- userid
 # 3 -- grpid
 
-jobid=sys.argv[0]
-userid=sys.argv[1]
+jobid=sys.argv[1]
+userid=sys.argv[2]
 uuid=jobid+'.'+userid
 
 #destroy the vm
