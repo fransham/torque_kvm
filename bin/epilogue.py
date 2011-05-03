@@ -51,7 +51,6 @@ del dom
 del conn
 
 print "domain " + uuid + " destroyed"
-sys.exit(1)
 
 #get the entry from the host file
 host = open(dirname + '/../var/tmp/torque-'+uuid,'w').read()
