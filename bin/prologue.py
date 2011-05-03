@@ -12,7 +12,7 @@ imagefile = "/nfs/images/bbr-ltda-torque.qcow"
 vmrundir = "/scratch/secureimages"
 dirname = os.path.dirname( os.path.abspath(__file__) )
 dbfile=dirname + "/../var/network.db"
-lockfile=dirname + "/../var/db.lock
+lockfile=dirname + "/../var/db.lock"
 
 
 import sys
