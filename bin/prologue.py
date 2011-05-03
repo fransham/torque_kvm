@@ -53,7 +53,7 @@ while(count < 60):
 		break
 	except OSError:
 		time.sleep(1)
-		count++;
+		count++
 
 if (count >= 60):
 	print "could not acquire lock on db... exiting."
