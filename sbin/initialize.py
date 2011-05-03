@@ -22,7 +22,10 @@ broadcast="172.23.255.255"
 dnsserver="172.23.136.8"
 
 import os
-import sqlite3
+try:
+    import sqlite3
+except:
+    from pysqlite2 import dbapi2 as sqlite3
 
 dirname = os.path.dirname( os.path.abspath(__file__) )
 netfile=dirname + "/../etc/network.conf"

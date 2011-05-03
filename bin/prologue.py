@@ -18,8 +18,13 @@ import sys
 import commands
 import os
 import time
-import sqlite3
 import libvirt
+
+try:
+    import sqlite3
+except:
+    from pysqlite2 import dbapi2 as sqlite3
+
 
 # prologue gets 3 arguments:
 # 1 -- jobid
