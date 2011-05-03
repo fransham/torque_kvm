@@ -63,3 +63,6 @@ c.execute("update reservations set inuse = 0 where hostname=?",[host])
 conn.commit()
 c.close()
 
+#delete the image file
+os.remove("/scratch/secureimages/"+uuid)
+
