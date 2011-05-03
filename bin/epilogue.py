@@ -8,18 +8,19 @@
 #
 ###########################################
 
+import libvirt
+import smtplib
+import os
+try:
+    import sqlite3
+except:
+    from pysqlite2 import dbapi2 as sqlite3
 
 #parameters... hardcoded for now.
 dirname = os.path.dirname( os.path.abspath(__file__) )
 dbfile=dirname + "/../var/network.db"
 
 
-import libvirt
-import smtplib
-try:
-    import sqlite3
-except:
-    from pysqlite2 import dbapi2 as sqlite3
 
 # epilogue gets 3 arguments:
 # 1 -- jobid
