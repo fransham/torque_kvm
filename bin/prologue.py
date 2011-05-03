@@ -14,6 +14,7 @@ dirname = os.path.dirname( os.path.abspath(__file__) )
 dbfile=dirname + "/../var/network.db"
 lockfile=dirname + "/../var/db.lock
 
+
 import sys
 import commands
 import os
@@ -34,6 +35,7 @@ except:
 jobid=sys.argv[0]
 userid=sys.argv[1]
 uuid=jobid+'.'+userid
+
 
 #clone the image:
 target=vmrundir+'/'+userid+'.'+jobid
@@ -128,7 +130,7 @@ print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
 
 # write the ip address of the booted vm to a file so that the
 # user's job can read it:
-jobfile = open('/tmp/torque-'+uuid,'w')
+jobfile = open(dirname + '/../var/tmp/torque-'+uuid,'w')
 jobfile.write(host)
 jobfile.close()
 
