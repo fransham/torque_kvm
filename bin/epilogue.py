@@ -12,7 +12,6 @@
 #parameters... hardcoded for now.
 dirname = os.path.dirname( os.path.abspath(__file__) )
 dbfile=dirname + "/../var/network.db"
-lockfile=dirname + "/../var/db.lock
 
 
 import libvirt
