@@ -31,13 +31,13 @@ lockfile=dirname + "/../var/db.lock"
 # 2 -- userid
 # 3 -- grpid
 
-jobid=sys.argv[0]
-userid=sys.argv[1]
+jobid=sys.argv[1]
+userid=sys.argv[2]
 uuid=jobid+'.'+userid
 
 
 #clone the image:
-target=vmrundir+'/'+userid+'.'+jobid
+target=vmrundir+'/'+uuid
 (ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
 if (ret != 0):
 	print "Error creating image.  Error message follows:" 
