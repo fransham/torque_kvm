@@ -33,7 +33,7 @@ lockfile=dirname + "/../var/db.lock"
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
-uuid=jobid+'.'+userid
+uuid=userid+'.'+jobid
 
 
 #clone the image:

@@ -31,7 +31,7 @@ dbfile=dirname + "/../var/network.db"
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
-uuid=jobid+'.'+userid
+uuid=userid+'.'+jobid
 
 #destroy the vm
 conn = libvirt.open(None)
