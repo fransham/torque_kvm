@@ -51,7 +51,7 @@ outfile = open(dhcpfile,'w')
 
 lines = open(netfile, 'r').readlines()
 for line in lines:
-	if line.startswith(('#',' ')):
+	if line.startswith('#'):
 		continue
 	(hostname, ipaddr, macaddr) = line.rstrip().split(' ')
 
