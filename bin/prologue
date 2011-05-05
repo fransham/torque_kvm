@@ -17,25 +17,23 @@ except:
     from pysqlite2 import dbapi2 as sqlite3
 
 
-# some parameters, hardcoded for now:
-torque_home="/var/spool/torque"
-
-imagefile = "/opt/nimbus/var/workspace-control/images/bbr-ltda.qcow2"
-vmrundir = "/scratch/secureimages"
-
-dbfile=torque_home + "/net/network.db"
-lockfile=torque_home + "/net/db.lock"
-target_hostfile=torque_home+"/virt/"+jobid
-
 # prologue gets 3 arguments:
 # 1 -- jobid
 # 2 -- userid
 # 3 -- grpid
-
 jobid=sys.argv[1]
 userid=sys.argv[2]
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
+
+# some parameters, hardcoded for now:
+torque_home="/var/spool/torque"
+imagefile = "/opt/nimbus/var/workspace-control/images/bbr-ltda.qcow2"
+vmrundir = "/scratch/secureimages"
+dbfile=torque_home + "/net/network.db"
+lockfile=torque_home + "/net/db.lock"
+target_hostfile=torque_home+"/virt/"+jobid
+
 
 #clone the image:
 target=vmrundir+'/'+uuid
