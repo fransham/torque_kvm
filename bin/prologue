@@ -126,8 +126,10 @@ if dom == None:
 
 print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
 
-# write the ip address of the booted vm to a file so that the
+# write the hostname of the booted vm to a file so that the
 # user's job can read it:
+echo "writing to target_hostfile "+ target_hostfile
+echo "host is" + host
 jobfile = open(target_hostfile,'w')
 jobfile.write(host)
 jobfile.close()
