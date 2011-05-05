@@ -28,7 +28,7 @@ uuid='vm-'+bits[0]
 
 # some parameters, hardcoded for now:
 torque_home="/var/spool/torque"
-imagefile = "/opt/nimbus/var/workspace-control/images/bbr-ltda.qcow2"
+imagefile = "/opt/torque-ltda/images/bbr-ltda.qcow2"
 vmrundir = "/scratch/secureimages"
 dbfile=torque_home + "/net/network.db"
 lockfile=torque_home + "/net/db.lock"

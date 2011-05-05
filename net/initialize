@@ -72,7 +72,8 @@ for line in lines:
 conn.commit()
 c.close()
 outfile.close()
-	
+
+print "database initialized."
 
 
 
