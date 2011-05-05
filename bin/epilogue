@@ -33,7 +33,7 @@ jobid=sys.argv[1]
 userid=sys.argv[2]
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
-jobfile=torque_home+"/virt/"+jobid
+target_hostfile=torque_home+"/virt/"+jobid
 
 
 #destroy the vm
@@ -56,7 +56,7 @@ del conn
 print "domain " + uuid + " destroyed"
 
 #get the entry from the host file
-host = open(jobfile,'w').read()
+host = open(target_hostfile,'w').read()
 
 #add the entry back into the db
 conn=sqlite3.connect(dbfile)
@@ -69,7 +69,7 @@ c.close()
 os.remove("/scratch/secureimages/"+uuid)
 
 #delete the job file and script:
-os.remove(jobfile)
-os.remove(jobfile+'.job')
+os.remove(target_hostfile)
+os.remove(target_hostfile+'.job')
 
 #all done!

@@ -25,8 +25,7 @@ vmrundir = "/scratch/secureimages"
 
 dbfile=torque_home + "/net/network.db"
 lockfile=torque_home + "/net/db.lock"
-target_hostfile=torque_home+'/virt/${PBD_JOBID}'
-
+target_hostfile=torque_home+"/virt/"+jobid
 
 # prologue gets 3 arguments:
 # 1 -- jobid
