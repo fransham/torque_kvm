@@ -31,7 +31,8 @@ dbfile=torque_home + "/net/network.db"
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
-uuid=userid+'.'+jobid
+bits=jobid.split('.')
+uuid='vm-'+bits[0]
 jobfile=torque_home+"/virt/"+jobid
 
 

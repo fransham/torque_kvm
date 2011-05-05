@@ -35,8 +35,8 @@ target_hostfile=torque_home+'/virt/${PBD_JOBID}'
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
-uuid=userid+'.'+jobid
-
+bits=jobid.split('.')
+uuid='vm-'+bits[0]
 
 #clone the image:
 target=vmrundir+'/'+uuid
