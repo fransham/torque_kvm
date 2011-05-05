@@ -130,7 +130,7 @@ print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
 # user's job can read it:
 print "writing to target_hostfile "+ target_hostfile
 print "host is" + host
-jobfile = open(target_hostfile,'r+')
+jobfile = open(target_hostfile,'w')
 jobfile.write(host)
 jobfile.close()
 
