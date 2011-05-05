@@ -21,7 +21,7 @@ gateway="172.23.128.1"
 broadcast="172.23.255.255"
 dnsserver="172.23.136.8"
 # some parameters, hardcoded for now:
-torque_home="/var/spool/torque"gedit 
+torque_home="/var/spool/torque"
 dbfile=torque_home + "/net/network.db"
 netfile=torque_home + "/net/network.conf"
 dhcpfile=torque_home + "/net/dhcpd.entries"
