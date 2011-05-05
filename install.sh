@@ -20,6 +20,8 @@ cp -v $SCRIPTDIR/bin/prologue $TORQUE_HOME/virt/prologue
 cp -v $SCRIPTDIR/bin/epilogue $TORQUE_HOME/virt/epilogue
 cp -v $SCRIPTDIR/net/* $TORQUE_HOME/net/
 
+echo "Creating database from network file"
+
 $TORQUE_HOME/net/initialize
 
 

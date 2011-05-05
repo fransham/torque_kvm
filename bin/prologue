@@ -18,7 +18,7 @@ except:
 
 
 # some parameters, hardcoded for now:
-torque_home=/var/spool/torque
+torque_home="/var/spool/torque"
 
 imagefile = "/opt/nimbus/var/workspace-control/images/bbr-ltda.qcow2"
 vmrundir = "/scratch/secureimages"

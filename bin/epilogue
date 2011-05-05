@@ -19,7 +19,7 @@ except:
     from pysqlite2 import dbapi2 as sqlite3
 
 #parameters... hardcoded for now.
-torque_home=/var/spool/torque
+torque_home="/var/spool/torque"
 dbfile=torque_home + "/net/network.db"
 
 
