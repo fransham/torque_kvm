@@ -48,7 +48,9 @@ except:
     print 'Failed to find the domain'
     sys.exit(1)
 
-dom.destroy()
+if dom.shutdown() != 0:
+    print 'Failed to shutdown domain... destroying'
+    dom.destroy()
 
 del dom
 del conn
