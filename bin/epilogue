@@ -19,8 +19,8 @@ except:
     from pysqlite2 import dbapi2 as sqlite3
 
 #parameters... hardcoded for now.
-dirname = os.path.dirname( os.path.abspath(__file__) )
-dbfile=dirname + "/../var/network.db"
+torque_home=/var/spool/torque
+dbfile=torque_home + "/net/network.db"
 
 
 
@@ -32,6 +32,8 @@ dbfile=dirname + "/../var/network.db"
 jobid=sys.argv[1]
 userid=sys.argv[2]
 uuid=userid+'.'+jobid
+jobfile=torque_home+"/virt/"+jobid
+
 
 #destroy the vm
 conn = libvirt.open(None)
@@ -53,7 +55,7 @@ del conn
 print "domain " + uuid + " destroyed"
 
 #get the entry from the host file
-host = open(dirname + '/../var/tmp/torque-'+uuid,'w').read()
+host = open(jobfile,'w').read()
 
 #add the entry back into the db
 conn=sqlite3.connect(dbfile)
@@ -65,3 +67,8 @@ c.close()
 #delete the image file
 os.remove("/scratch/secureimages/"+uuid)
 
+#delete the job file and script:
+os.remove(jobfile)
+os.remove(jobfile+'.job')
+
+#all done!

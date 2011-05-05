@@ -18,12 +18,14 @@ except:
 
 
 # some parameters, hardcoded for now:
+torque_home=/var/spool/torque
+
 imagefile = "/opt/nimbus/var/workspace-control/images/bbr-ltda.qcow2"
 vmrundir = "/scratch/secureimages"
-dirname = os.path.dirname( os.path.abspath(__file__) )
-dbfile=dirname + "/../var/network.db"
-lockfile=dirname + "/../var/db.lock"
 
+dbfile=torque_home + "/net/network.db"
+lockfile=torque_home + "/net/db.lock"
+target_hostfile=torque_home+'/virt/${PBD_JOBID}'
 
 
 # prologue gets 3 arguments:
@@ -129,7 +131,7 @@ print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
 
 # write the ip address of the booted vm to a file so that the
 # user's job can read it:
-jobfile = open(dirname + '/../var/tmp/torque-'+uuid,'w')
+jobfile = open(target_hostfile,'w')
 jobfile.write(host)
 jobfile.close()
 
