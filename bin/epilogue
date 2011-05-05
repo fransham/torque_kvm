@@ -72,6 +72,5 @@ os.remove("/scratch/secureimages/"+uuid)
 
 #delete the job file and script:
 os.remove(target_hostfile)
-os.remove(target_hostfile+'.job')
 
 #all done!

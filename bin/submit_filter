@@ -13,7 +13,7 @@
 import sys
 
 torque_home=/var/spool/torque
-target_host=torque_home+'/virt/${PBD_JOBID}'
+target_host=torque_home+'/virt/${PBS_JOBID}'
 
 #customize any system defaults you want in here.
 system_defaults='''
@@ -87,6 +87,7 @@ print 'ssh ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
 
 #run the job!
 print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
+
 
 
 
