@@ -60,7 +60,7 @@ else:
 	print 'export TARGET_HOST=`cat /usr/local/ltda/var/tmp/${PBD_JOBID}`'
 	print 'export TARGET_SCRIPT=/usr/local/ltda/var/tmp/${PBD_JOBID}.job'	
 	for var in envvars_to_job:
-		print 'echo '+var+' \=$'+var+' >> $TARGET_SCRIPT'
+		print 'echo export '+var+'\=$'+var+' >> $TARGET_SCRIPT'
 	
 #switch to the correct initial directory
 print 'echo cd $PBS_O_WORKDIR >> $TARGET_SCRIPT'
