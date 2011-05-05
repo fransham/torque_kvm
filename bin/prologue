@@ -133,6 +133,7 @@ print "host is" + host
 jobfile = open(target_hostfile,'w')
 jobfile.write(host)
 jobfile.close()
+os.chmod(target_hostfile,644)
 
 #vm created! 
 sys.exit(0)
