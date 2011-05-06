@@ -128,8 +128,7 @@ print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
 
 # write the hostname of the booted vm to a file so that the
 # user's job can read it:
-print "writing to target_hostfile "+ target_hostfile
-print "host is" + host
+print "host is: " + host
 jobfile = open(target_hostfile,'w')
 jobfile.write(host)
 jobfile.close()
