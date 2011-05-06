@@ -81,7 +81,7 @@ for line in userjob:
 print 'ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"'
 
 #the vm is online now.  Copy the job file.
-print 'scp ${TARGET_HOST}:/tmp/${PBS_JOBID}'
+print 'scp ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID}'
 
 #make the job file execuable
 print 'ssh ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
