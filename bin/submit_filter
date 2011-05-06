@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-################################################################3
+################################################################
 #
 #  submit filter.  This script takes the user's submit file, and
 #  customizes it to pipe it via ssh into the vm.
@@ -16,8 +16,9 @@ torque_home="/var/spool/torque"
 target_host=torque_home+'/virt/${PBS_JOBID}'
 
 #customize any system defaults you want in here.
+#memory should be small, since all it's doing is running ssh
 system_defaults='''
-#PBS -l mem=2048MB
+#PBS -l mem=16MB
 #PBS -l walltime=48:00:00 
 #PBS -l nodes=1 
 #PBS -l ncpus=1
@@ -74,7 +75,7 @@ for line in userjob:
 	print 'echo \''+line.replace('\'','\'\\\'\'').rstrip()+'\' >> $TARGET_SCRIPT'
 
 #stall to make sure the VM has come online.  If it's not online after
-#5 mins, it's probably not coming up, and the other commands will fail too
+#5 mins, it's probably not coming up, and the other commands will fail too.
 #The user will see connection timed out, or no route to host in the
 #job log
 print 'ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"'
