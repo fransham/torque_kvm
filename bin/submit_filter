@@ -84,11 +84,12 @@ print 'ssh -o ConnectionAttempts=300,UserKnownHostsFile=/dev/null ${TARGET_HOST}
 print 'scp -o UserKnownHostsFile=/dev/null ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID}'
 
 #make the job file execuable
-print 'ssh -o UserKnownHostsFile=/dev/null ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
+print 'ssh -o UserKnownHostsFile=/dev/null $q{TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
 
 #run the job!
 print 'ssh -o UserKnownHostsFile=/dev/null ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
 
-
+#cleanup the job log
+print 'rm $TARGET_SCRIPT'
 
 
