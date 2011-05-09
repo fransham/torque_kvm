@@ -24,17 +24,24 @@ dbfile=torque_home + "/net/network.db"
 
 
 
-# epilogue gets 3 arguments:
+# epilogue gets 7 arguments:
 # 1 -- jobid
 # 2 -- userid
 # 3 -- grpid
+# 4 -- jobname
+# 5 -- list of requested resource limits
+# 6 -- job execution queue
+# 7 -- job account
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
+resources=sys.argv[5]
+
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
 target_hostfile=torque_home+"/virt/"+jobid
 
+print "REQUESTED RESOURCES: "+resources
 
 #destroy the vm
 conn = libvirt.open(None)
