@@ -149,7 +149,7 @@ def write_pbs_directives():
         print directive
         
 # write  job for bash shells:
-def write_job_bash():
+def setup_job_bash():
     print 'export TARGET_HOST=`cat '+target_host+'`'
     print 'export TARGET_SCRIPT='+target_script	
     for var in envvars_to_job:
