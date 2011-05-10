@@ -11,8 +11,6 @@
 #if we're not in an interactive session, then exit
 if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
 
-  echo "CSHELL!"
-
   setenv JOBFILE /var/spool/torque/virt/${PBS_JOBID}
   if ( ! -e ${JOBFILE} ) then
     echo "No job file present... exiting"
