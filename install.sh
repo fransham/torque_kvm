@@ -19,6 +19,8 @@ chmod 1777 $TORQUE_HOME/virt
 cp -v $SCRIPTDIR/bin/prologue $TORQUE_HOME/mom_priv/prologue
 cp -v $SCRIPTDIR/bin/epilogue $TORQUE_HOME/mom_priv/epilogue
 cp -v $SCRIPTDIR/net/* $TORQUE_HOME/net/
+cp -v $SCRIPTDIR/profile.d/torque-interactive.sh /etc/profile.d/
+
 
 echo "Creating database from network file"
 
