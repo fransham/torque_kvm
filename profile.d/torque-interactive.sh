@@ -29,6 +29,9 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   # stall to make sure the VM is online:
   ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
 
+  echo "VM is ready. Connecting..."
+  echo " "
+
   # connect to the VM:
   ssh -t ${TARGET_HOST} "/bin/bash -i"
 
