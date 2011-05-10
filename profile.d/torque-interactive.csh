@@ -22,10 +22,13 @@ if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
     exit 1
   endif
 
-  echo "Connecting to virtual machine... please wait"
-  
+  echo "Starting virtual machine... please wait"
+   
   # stall to make sure the VM is online:
   ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
+
+  echo "VM is ready. Connecting..."
+  echo " "
 
   # connect to the VM:
   ssh -t ${TARGET_HOST} "/bin/bash -i"
