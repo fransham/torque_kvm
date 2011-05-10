@@ -35,7 +35,16 @@ envvars_to_job=("PBS_O_HOST","PBS_O_LOGNAME",
     "PBS_O_HOME","PBS_O_WORKDIR","PBS_ENVIRONMENT",
     "PBS_O_QUEUE","PBS_JOBID", "PBS_JOBNAME",
     "PBS_NODEFILE")
+    
+# put your filters into this array to have them applied to the data
+# write any new filters you want and add them to this list.
+filters=[
+         lambda x: memory_filter(x),  
+         lambda x: environment_filter(x),  
+         lambda x: pbs_directive_filter(x)
+         ]
 
+# The main function.  It all starts here!
 def main():
     # filter the command line arguments first:
     cmd_line_arg_filter()
@@ -59,11 +68,14 @@ def main():
     write_job(userjob)
 
     
-#put any job filters you want to apply into this function:
+#apply the filters.
 def apply_filters(data):
     filtered_data=[]
     for line in data:
-        filtered_data.append(  pbs_directive_filter(environment_filter(memory_filter(line))).rstrip() )
+        output = line.rstrip()
+        for filter in filters:
+            output = filter(output)
+        filtered_data.append(output)
     return filtered_data
         
 #filter the command line arguments first.  Check for
@@ -96,12 +108,11 @@ def cmd_line_arg_filter():
 def memory_filter(tocheck):
     newrequest = tocheck
     if re.match('\#PBS\s+\-l.*mem=',tocheck):
-        newrequest=""
         resource = (re.split('\s+|,',tocheck.rstrip())[2:])
         for request in resource:
             if re.match('mem=',request):
-                res=request[4:]
-                suffix=res[-2:]
+                old=request[4:]
+                suffix=old[-2:]
                 if re.match('^[g|G]',suffix):
                         suffix="MB"
                 elif re.match('^[m|M]', suffix):
@@ -109,10 +120,8 @@ def memory_filter(tocheck):
                 else:
                         "please specify a memory in MB or GB.  Your job will need at least 512MB to run properly"
                         sys.exit(-1)
-                mem=res[:-2]+"0"
-                newrequest += "#PBS -l mem="+mem+suffix+"\n"
-            else:
-                    newrequest +=  "#PBS -l "+request+"\n"
+                new=old[:-2]+"0"+suffix            
+        newrequest =  tocheck.replace(old, new)
     return newrequest
     
 # find environment variables in job script:
