@@ -11,9 +11,14 @@
 #if we're not in an interactive session, then exit
 if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
 
-  TARGET_HOST=`cat /var/spool/torque/virt/${PBS_JOBID}`
-  if [ ! -f $TARGET_HOST ]; then
-    echo "Cannot find job...  exiting"
+  JOBFILE=/var/spool/torque/virt/${PBS_JOBID}
+  if [ ! -f ${JOBFILE} ]; then
+    echo "No job file present... exiting"
+    exit 1
+  fi
+  TARGET_HOST=`cat ${JOBFILE}`
+  if [ -z "$TARGET_HOST" ]; then
+    echo "Cannot find vm host name... exiting"
     exit 1
   fi
 
@@ -23,7 +28,7 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
 
   # connect to the VM:
-  ssh -t ${TARGET_HOST} "source /tmp/${PBS_JOBID};/bin/bash -i"
+  ssh -t ${TARGET_HOST} "/bin/bash -i"
 
   # exit when we're done.
   exit 0
