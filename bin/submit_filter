@@ -195,7 +195,7 @@ def write_job(userjob):
         print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
 
     #cleanup the job script
-    print 'rm $TARGET_SCRIPT'
+#    print 'rm $TARGET_SCRIPT'
     
 if __name__ == "__main__":
     main()
