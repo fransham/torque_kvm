@@ -11,8 +11,6 @@
 #if we're not in an interactive session, then exit
 if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
 
-  trap '{ echo "Exiting... vm will be destroyed." ; exit 1; }' INT
-
   setenv JOBFILE /var/spool/torque/virt/${PBS_JOBID}
   if ( ! -e ${JOBFILE} ) then
     echo "No job file present... exiting"
