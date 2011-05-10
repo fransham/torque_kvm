@@ -16,7 +16,7 @@ import sys
 #customize any system defaults you want in here.
 #memory should be small, since all it's doing is running ssh
 system_defaults='''
-#PBS -l mem=10MB
+#PBS -l mem=16MB
 #PBS -l walltime=48:00:00 
 #PBS -l nodes=1 
 #PBS -l ncpus=1
@@ -39,7 +39,6 @@ envvars_to_job=("PBS_O_HOST","PBS_O_LOGNAME",
 # put your filters into this array to have them applied to the data
 # write any new filters you want and add them to this list.
 filters=[
-         lambda x: memory_filter(x),  
          lambda x: environment_filter(x),  
          lambda x: pbs_directive_filter(x)
          ]
