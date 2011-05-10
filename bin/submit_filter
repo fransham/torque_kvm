@@ -94,7 +94,7 @@ def cmd_line_arg_filter():
                 global interactive
                 interactive=True
             elif arg == '-l':
-                if re.match('mem\='):
+                if re.match('mem\=', arg):
                     print "Sorry, memory cannot be specified on the command line."
                     print "Please add it to your submit script."
                     sys.exit(-1)
