@@ -22,8 +22,5 @@ cp -v $SCRIPTDIR/net/* $TORQUE_HOME/net/
 cp -v $SCRIPTDIR/profile.d/torque-interactive.* /etc/profile.d/
 
 
-echo "Creating database from network file"
-
-$TORQUE_HOME/net/initialize
-
+echo "remember to run TORQUE_HOME/net/initialize to configure your database"
 

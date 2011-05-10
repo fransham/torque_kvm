@@ -35,13 +35,10 @@ dbfile=torque_home + "/net/network.db"
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
-resources=sys.argv[5]
 
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
 target_hostfile=torque_home+"/virt/"+jobid
-
-print "REQUESTED RESOURCES: "+resources
 
 #destroy the vm
 conn = libvirt.open(None)
