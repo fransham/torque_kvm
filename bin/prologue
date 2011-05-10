@@ -66,6 +66,8 @@ try:
         (host,ip,mac,inuse) = c.next()
 except StopIteration:
         print "no free network slots!"
+	os.rmdir(lockfile)
+	c.close()
         sys.exit(1)
 
 # update the db
