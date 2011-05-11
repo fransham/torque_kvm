@@ -49,7 +49,7 @@ exitcode=sys.argv[10]
 
 print '''
 ------------------------------------------------------------------
-PBS EPILOGUE:
+TORQUE EPILOGUE:
   jobid:          '''+jobid+'''
   userid:         '''+userid+'''
   groupid:        '''+grpid+'''
