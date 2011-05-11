@@ -16,8 +16,8 @@ if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
     echo "No job file present... exiting"
     exit 1
   endif
-  TARGET_HOST=`cat ${JOBFILE}`
-  if if ( ! ($?TARGET_HOST) ) then
+  setenv TARGET_HOST `cat ${JOBFILE}`
+  if ( ! ($?TARGET_HOST) ) then
     echo "Cannot find vm host name... exiting"
     exit 1
   endif
