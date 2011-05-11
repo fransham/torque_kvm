@@ -21,8 +21,24 @@ except:
 # 1 -- jobid
 # 2 -- userid
 # 3 -- grpid
+# 4 -- job name
+# 5 -- list of requested resources
+# 6 -- queue
+# 7 -- job account
 jobid=sys.argv[1]
 userid=sys.argv[2]
+requested_resources=sys.argv[5]
+queue=sys.argv[6]
+
+print '''
+--------------------------------------------------------
+TORQUE PROLOGUE:
+  jobid:               '''+jobid+'''
+  userid:              '''+userid+'''
+  requested resources: '''+requested_resources+'''
+  queue:               '''+queue+'''
+'''
+
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
 
@@ -126,15 +142,18 @@ if dom == None:
     print 'Virtual machine creation failed'
     sys.exit(1)
 
-print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
 
 # write the hostname of the booted vm to a file so that the
 # user's job can read it:
-print "host: " + host
+print "  host:                " + host
 jobfile = open(target_hostfile,'w')
 jobfile.write(host)
 jobfile.close()
 os.chmod(target_hostfile,644)
+
+print '''
+--------------------------------------------------------
+'''
 
 #vm created! 
 sys.exit(0)

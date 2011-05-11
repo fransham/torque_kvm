@@ -24,17 +24,42 @@ dbfile=torque_home + "/net/network.db"
 
 
 
-# epilogue gets 7 arguments:
+# epilogue gets 9 arguments:
 # 1 -- jobid
 # 2 -- userid
 # 3 -- grpid
 # 4 -- jobname
-# 5 -- list of requested resource limits
-# 6 -- job execution queue
-# 7 -- job account
+# 5 -- session id
+# 6 -- list of requested resource limits
+# 7 -- list of resources used by job
+# 8 -- job execution queue
+# 9 -- job account
+# 10 -- job exit code
 
 jobid=sys.argv[1]
 userid=sys.argv[2]
+grpid=sys.argv[3]
+jobname=sys.argv[4]
+sessionid=sys.argv[5]
+requested_resources=sys.argv[6]
+used_resources=sys.argv[7]
+jobqueue=sys.argv[8]
+jobaccnt=sys.argv[9]
+exitcode=sys.argv[10]
+
+print '''
+--------------------------------------------------------
+PBS EPILOGUE:
+  jobid:          '''+jobid+'''
+  userid:         '''+userid+'''
+  groupid:        '''+groupid+'''
+  job name:       '''+jobname+'''
+  session id:     '''+sessionid+'''
+  used resources: '''+used_resources+'''
+  queue:          '''+queue+'''
+  exit code:      '''+exitcode+'''
+ '''
+
 
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
@@ -77,4 +102,7 @@ os.remove("/scratch/secureimages/"+uuid)
 #delete the job file and script:
 os.remove(target_hostfile)
 
+print '''
+--------------------------------------------------------
+'''
 #all done!
