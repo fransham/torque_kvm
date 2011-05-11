@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/tcsh
 ############################################################
 #
 #  place this script in /etc/profile.d so that it gets executed
@@ -8,31 +8,35 @@
 #  the VM.
 #############################################################
 
-#if we're not in an interactive session, then exit
-if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
+#test if we're in a PBS session:
+if ($?PBS_ENVIRONMENT) then
 
-  setenv JOBFILE /var/spool/torque/virt/${PBS_JOBID}
-  if ( ! -e ${JOBFILE} ) then
-    echo "No job file present... exiting"
-    exit 1
-  endif
-  setenv TARGET_HOST `cat ${JOBFILE}`
-  if ( ! ($?TARGET_HOST) ) then
-    echo "Cannot find vm host name... exiting"
-    exit 1
-  endif
+	#if we're not in an interactive session, then exit
+	if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
 
-  echo "Starting virtual machine... please wait"
+  	setenv JOBFILE /var/spool/torque/virt/${PBS_JOBID}
+  	if ( ! -e ${JOBFILE} ) then
+    	echo "No job file present... exiting"
+    	exit 1
+  	endif
+  	setenv TARGET_HOST `cat ${JOBFILE}`
+  	if ( ! ($?TARGET_HOST) ) then
+    	echo "Cannot find vm host name... exiting"
+    	exit 1
+  	endif
+
+  	echo "Starting virtual machine... please wait"
    
-  # stall to make sure the VM is online:
-  ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
+  	# stall to make sure the VM is online:
+  	ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
 
-  echo "VM is ready. Connecting..."
-  echo " "
+  	echo "VM is ready. Connecting..."
+  	echo " "
 
-  # connect to the VM:
-  ssh -t ${TARGET_HOST} "/bin/bash -i"
+  	# connect to the VM:
+  	ssh -t ${TARGET_HOST} "/bin/bash -i"
 
-  # exit when we're done.
-  exit 0
-fi
+  	# exit when we're done.
+  	exit 0
+  endif
+endif
