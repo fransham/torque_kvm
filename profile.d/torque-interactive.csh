@@ -8,13 +8,13 @@
 #  the VM.
 #############################################################
 
+onintr int
+
 #test if we're in a PBS session:
 if ($?PBS_ENVIRONMENT) then
 
 	#if we're not in an interactive session, then exit
 	if (${PBS_ENVIRONMENT} == "PBS_INTERACTIVE") then
-	
-		onintr int
 
   	setenv JOBFILE /var/spool/torque/virt/${PBS_JOBID}
   	if ( ! -e ${JOBFILE} ) then
