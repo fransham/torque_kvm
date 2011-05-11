@@ -37,6 +37,6 @@ if ($?PBS_ENVIRONMENT) then
   	ssh -t ${TARGET_HOST} "/bin/bash -i"
 
   	# exit when we're done.
-  	exit 0
+  	logout
   endif
 endif
