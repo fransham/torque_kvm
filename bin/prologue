@@ -36,8 +36,7 @@ TORQUE PROLOGUE:
   jobid:               '''+jobid+'''
   userid:              '''+userid+'''
   requested resources: '''+requested_resources+'''
-  queue:               '''+queue+'''
-'''
+  queue:               '''+queue
 
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
@@ -151,8 +150,8 @@ jobfile.write(host)
 jobfile.close()
 os.chmod(target_hostfile,644)
 
-print '''
---------------------------------------------------------
+print '''--------------------------------------------------------
+
 '''
 
 #vm created! 

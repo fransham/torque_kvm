@@ -52,13 +52,12 @@ print '''
 PBS EPILOGUE:
   jobid:          '''+jobid+'''
   userid:         '''+userid+'''
-  groupid:        '''+groupid+'''
+  groupid:        '''+grpid+'''
   job name:       '''+jobname+'''
   session id:     '''+sessionid+'''
   used resources: '''+used_resources+'''
   queue:          '''+queue+'''
-  exit code:      '''+exitcode+'''
- '''
+  exit code:      '''+exitcode
 
 
 bits=jobid.split('.')
