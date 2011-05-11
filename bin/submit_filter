@@ -28,7 +28,7 @@ torque_home="/var/spool/torque"
 target_host=torque_home+'/virt/${PBS_JOBID}'
 target_script=target_host+'.job'
 bash_envs=target_host+'.bash_envs'
-tcsh_envs=target_host='.tcsh_envs'
+tcsh_envs=target_host=+'.tcsh_envs'
 userenvs=[]
 pbs_directives=[]
 
