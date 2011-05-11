@@ -29,7 +29,6 @@ target_host=torque_home+'/virt/${PBS_JOBID}'
 target_script=target_host+'.job'
 bash_envs=target_host+'.bash_envs'
 tcsh_envs=target_host='.tcsh_envs'
-interactive=False
 userenvs=[]
 pbs_directives=[]
 
@@ -82,34 +81,31 @@ def apply_filters(data):
     return filtered_data
         
 #filter the command line arguments first.  Check for
-#environment variables to pass to the job, interactive 
-#job flag, and memory request.   Memory requests from 
+#environment variables to pass to the job and memory request.   
+#Memory requests from 
 #the command line cannot be overwritten, so the job is
 #rejected.  Memory specifications in the submit script is fine.
 #Reject -S flag.
 def cmd_line_arg_filter():
-    i = iter(sys.argv)
-    try:
-        while(True):
-            arg = i.next()
-            if arg == '-v':
-                global userenvs
-                userenvs.extend(re.split(',',i.next()))
-            elif arg == '-I':
-                global interactive
-                interactive=True
+	i = iter(sys.argv)
+	try:
+		while(True):
+			arg = i.next()
+			if arg == '-v':
+				global userenvs
+				userenvs.extend(re.split(',',i.next()))
 			elif arg == '-l':
-            	if re.match('.*mem\=.*', i.next()):
-            	print "Sorry, memory cannot be specified on the command line."
-            	print "Please add it to your submit script."
-				sys.exit(-1)
+				if re.match('.*mem\=.*', i.next()):
+					print "Sorry, memory cannot be specified on the command line."
+					print "Please add it to your submit script."
+					sys.exit(-1)
 			elif arg == '-S':
 				print "Cannot specify a shell."
 				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
 				print "submit script to execute in a different environment."
 				sys.exit(-1)
-    except StopIteration:
-        pass
+	except StopIteration:
+		pass
 
 
 # we don't want to run with large amounts of memory, since our job just runs ssh.
@@ -207,11 +203,8 @@ def write_job(userjob):
     #make the job file execuable
     print 'ssh ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
 
-    #run the job.  Stay logged in if it's an interactive session
-    if interactive:
-        print 'ssh -t ${TARGET_HOST} "source /tmp/${PBS_JOBID};/bin/bash -i"'
-    else:
-        print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
+    #run the job.  
+    print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
 
     #cleanup the job script
     print 'rm $TARGET_SCRIPT'
