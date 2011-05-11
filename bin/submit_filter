@@ -20,12 +20,15 @@ system_defaults='''
 #PBS -l walltime=48:00:00 
 #PBS -l nodes=1 
 #PBS -l ncpus=1
+#PBS -S /bin/bash
 '''
 
 #global variables
 torque_home="/var/spool/torque"
 target_host=torque_home+'/virt/${PBS_JOBID}'
 target_script=target_host+'.job'
+bash_envs=target_host+'.bash_envs'
+tcsh_envs=target_host='.tcsh_envs'
 interactive=False
 userenvs=[]
 pbs_directives=[]
@@ -39,6 +42,7 @@ envvars_to_job=("PBS_O_HOST","PBS_O_LOGNAME",
 # put your filters into this array to have them applied to the data
 # write any new filters you want and add them to this list.
 filters=[
+		 lambda x: csh_shell_filter(x),
          lambda x: environment_filter(x),  
          lambda x: pbs_directive_filter(x)
          ]
@@ -57,11 +61,11 @@ def main():
     #write the directives to the job file
     write_pbs_directives()
     
+    #set the job targets
+    write_targets()
+    
     #setup the job for the proper shell
-    if shell_is_csh(data[0]):
-        setup_job_csh(data[0])
-    else:
-        setup_job_bash()
+    setup_job()
     
     #write the user's job to a file:
     write_job(userjob)
@@ -82,6 +86,7 @@ def apply_filters(data):
 #job flag, and memory request.   Memory requests from 
 #the command line cannot be overwritten, so the job is
 #rejected.  Memory specifications in the submit script is fine.
+#Reject -S flag.
 def cmd_line_arg_filter():
     i = iter(sys.argv)
     try:
@@ -94,10 +99,15 @@ def cmd_line_arg_filter():
                 global interactive
                 interactive=True
             elif arg == '-l':
-                if re.match('mem\=', arg):
+                if re.match('.*mem\=.*', i.next()):
                     print "Sorry, memory cannot be specified on the command line."
                     print "Please add it to your submit script."
                     sys.exit(-1)
+			elif arg == '-S'
+				print "Cannot specify a shell."
+				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
+				print "submit script to execute in a different environment."
+				sys.exit(-1)
     except StopIteration:
         pass
 
@@ -138,35 +148,42 @@ def pbs_directive_filter(tocheck):
     return tocheck
     
 #check if the user wants a csh or tcsh
-def shell_is_csh(shell):
-    if (shell.startswith('#!/bin/tcsh') or shell.startswith('#!/bin/csh')):
-        return True
-    return False
+def csh_shell_filter(tocheck):
+	if re.match('\#PBS\s+\-S.*csh',tocheck):
+		return '#PBS -S /bin/bash'
+	return tocheck
         
 def write_pbs_directives():
     print system_defaults
     for directive in pbs_directives:
         print directive
-        
-# write  job for bash shells:
-def setup_job_bash():
+
+def write_targets():
     print 'export TARGET_HOST=`cat '+target_host+'`'
     print 'export TARGET_SCRIPT='+target_script	
+    print 'export BASH_ENVS='+bash_envs
+    print 'export TCSH_ENVS='+tcsh_envs
+
+
+#setup the job for the right environment
+def setup_job():
+	setup_job_csh()
+	setup_job_bash()
+      
+# write  job for bash shells:
+def setup_job_bash():
     for var in envvars_to_job:
-        print 'echo export '+var+'=$'+var+' >> $TARGET_SCRIPT'
+        print 'echo export '+var+'=$'+var+' >> $BASH_ENVS'
     for var in userenvs:
-        print 'echo export '+var+' >> $TARGET_SCRIPT'
+        print 'echo export '+var+' >> $BASH_ENVS'
 
 
 #setup job for cshells 
-def setup_job_csh(shell):
-    print 'setenv TARGET_HOST `cat '+target_host+'`'
-    print 'setenv TARGET_SCRIPT '+target_script
-    print 'echo \''+shell.rstrip()+'\' >> $TARGET_SCRIPT'	
+def setup_job_csh():
     for var in envvars_to_job:
-        print 'echo setenv '+var+' $'+var+' >> $TARGET_SCRIPT'
+        print 'echo setenv '+var+' $'+var+' >> $TCSH_ENVS'
     for var in userenvs:
-        print 'echo setenv '+var.replace('=',' ')+' >> $TARGET_SCRIPT'
+        print 'echo setenv '+var.replace('=',' ')+' >> $TCSH_ENVS'
 
 #write the actual user's job 
 def write_job(userjob):
@@ -182,7 +199,9 @@ def write_job(userjob):
     #The user will see connection timed out in the job log
     print 'ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"'
 
-    #the vm is online now.  Copy the job file.
+    #the vm is online now.  Copy the env and job files.
+    print 'scp ${BASH_ENVS} ${TARGET_HOST}:/tmp/bash_environment'
+    print 'scp ${TCSH_ENVS} ${TARGET_HOST}:/tmp/tcsh_environment'
     print 'scp ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID}'
 
     #make the job file execuable
