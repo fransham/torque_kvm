@@ -32,7 +32,10 @@ if ($?PBS_ENVIRONMENT) then
   	# stall to make sure the VM is online:
   	ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
   	
-  	echo $status
+  	if ( $status ) then
+  		echo "VM creation failed... exiting."
+  		logout
+  	endif
 
   	echo "VM is ready. Connecting..."
   	echo " "
