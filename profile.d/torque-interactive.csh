@@ -8,7 +8,6 @@
 #  the VM.
 #############################################################
 
-onintr int
 
 #test if we're in a PBS session:
 if ($?PBS_ENVIRONMENT) then
@@ -48,7 +47,5 @@ if ($?PBS_ENVIRONMENT) then
   endif
 endif
 
-int:
-	echo "Destroying VM and exiting..."
-	logout
+
  
