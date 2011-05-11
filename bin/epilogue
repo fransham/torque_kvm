@@ -56,7 +56,7 @@ PBS EPILOGUE:
   job name:       '''+jobname+'''
   session id:     '''+sessionid+'''
   used resources: '''+used_resources+'''
-  queue:          '''+queue+'''
+  queue:          '''+jobqueue+'''
   exit code:      '''+exitcode
 
 
