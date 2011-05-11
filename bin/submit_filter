@@ -103,7 +103,7 @@ def cmd_line_arg_filter():
                     print "Sorry, memory cannot be specified on the command line."
                     print "Please add it to your submit script."
                     sys.exit(-1)
-			elif arg == '-S'
+			elif arg == '-S':
 				print "Cannot specify a shell."
 				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
 				print "submit script to execute in a different environment."
