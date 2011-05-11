@@ -48,7 +48,7 @@ jobaccnt=sys.argv[9]
 exitcode=sys.argv[10]
 
 print '''
---------------------------------------------------------
+------------------------------------------------------------------
 PBS EPILOGUE:
   jobid:          '''+jobid+'''
   userid:         '''+userid+'''
@@ -83,7 +83,7 @@ if dom.shutdown() != 0:
 del dom
 del conn
 
-print "domain " + uuid + " destroyed"
+print "  domain " + uuid + " destroyed"
 
 #get the entry from the host file
 host = open(target_hostfile,'r').read()
@@ -101,7 +101,6 @@ os.remove("/scratch/secureimages/"+uuid)
 #delete the job file and script:
 os.remove(target_hostfile)
 
-print '''
---------------------------------------------------------
+print '''------------------------------------------------------------------
 '''
 #all done!
