@@ -113,6 +113,8 @@ def cmd_line_arg_filter():
 					print "Please add it to your submit script."
 					sys.exit(-1)
 				if re.match('.*other\=baremetal.*', opt):
+					for line in sys.stdin.readlines()
+						print line
 					sys.exit(0)
 			elif arg == '-S':
 				print "Cannot specify a shell."
