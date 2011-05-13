@@ -60,11 +60,14 @@ if re.match('.*other=.*', requested_resources):
 		if resource.startswith('other='):
 			vmname = re.split('=',resource)[1]
 			break
+	print vmname
 	if vmname == 'baremetal':
 		print '''------------------------------------------------------------------'''		
 		sys.exit(0)
 	if os.path.exists(imagedir+vmname+'.qcow2'):
 		imagefile=imagedir+vmname+'.qcow2'
+
+print imagefile
 
 #clone the image:
 target=vmrundir+'/'+uuid
