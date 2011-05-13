@@ -55,7 +55,7 @@ def main():
     data = sys.stdin.readlines()
 
     #check if we want a baremetal session.  
-    check_baremetal()
+    check_baremetal(data)
     
     #apply the filters to the #PBS directives
     userjob = apply_filters(data)
