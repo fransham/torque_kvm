@@ -55,7 +55,7 @@ def main():
     data = sys.stdin.readlines()
 
     #check if we want a baremetal session.  
-    check_baremetal(data)
+    #check_baremetal(data)
     
     #apply the filters to the #PBS directives
     userjob = apply_filters(data)
@@ -112,7 +112,7 @@ def cmd_line_arg_filter():
 					print "Sorry, memory cannot be specified on the command line."
 					print "Please add it to your submit script."
 					sys.exit(-1)
-				if re.match('.*other\=baremetal.*', opt):
+				elif re.match('.*other\=baremetal.*', opt):
 					for line in sys.stdin.readlines():
 						print line
 					sys.exit(0)
