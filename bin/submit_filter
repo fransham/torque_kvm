@@ -53,6 +53,9 @@ def main():
     
     #get the user's job script from STDIN
     data = sys.stdin.readlines()
+
+    #check if we want a baremetal session.  
+    check_baremetal()
     
     #apply the filters to the #PBS directives
     userjob = apply_filters(data)
@@ -79,13 +82,22 @@ def apply_filters(data):
             output = filter(output)
         filtered_data.append(output)
     return filtered_data
-        
+
+
+# check if the user requested a baremetal session.  This means that we don't filter the job at all.
+def check_baremetal(userjob):
+    for line in userjob:
+		if re.match('\#PBS\s+\-l.*other=baremetal',line):
+			print userjob
+			sys.exit(0)
+
 #filter the command line arguments first.  Check for
 #environment variables to pass to the job and memory request.   
 #Memory requests from 
 #the command line cannot be overwritten, so the job is
 #rejected.  Memory specifications in the submit script is fine.
 #Reject -S flag.
+#if we want a baremetal session, just quit without doing anything.
 def cmd_line_arg_filter():
 	i = iter(sys.argv)
 	try:
@@ -104,6 +116,9 @@ def cmd_line_arg_filter():
 				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
 				print "submit script to execute in a different environment."
 				sys.exit(-1)
+			elif arg == '-l':
+				if re.match('.*other=baremetal.*', i.next()):
+					sys.exit(0)
 	except StopIteration:
 		pass
 

@@ -11,6 +11,8 @@ import commands
 import os
 import time
 import libvirt
+import re
+
 try:
     import sqlite3
 except:
@@ -43,12 +45,26 @@ uuid='vm-'+bits[0]
 
 # some parameters, hardcoded for now:
 torque_home="/var/spool/torque"
-imagefile = "/opt/torque-ltda/images/bbr-ltda.qcow2"
+imagedir = "/opt/torque-ltda/images/"
+imagefile = imagedir+"bbr-ltda.qcow2"
 vmrundir = "/scratch/secureimages"
 dbfile=torque_home + "/net/network.db"
 lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
 
+# check if we want a different image or a baremetal session:
+if re.match('.*other=.*', requested_resources):
+        request = re.split(',',requested_resources.rstrip())
+	vmname='somegarbagestring'
+	for resource in request:
+		if resource.startswith('other='):
+			vmname = re.split('=',resource)[1]
+			break
+	if vmname == 'baremetal':
+		print '''------------------------------------------------------------------'''		
+		sys.exit(0)
+	if os.path.exists(imagedir+vmname):
+		imagefile=imagedir+vmname
 
 #clone the image:
 target=vmrundir+'/'+uuid
@@ -129,6 +145,7 @@ xmldesc="""<domain type='kvm'>
     </interface>
   </devices>
 </domain>
+
 """
 
 # Boot the vm
