@@ -121,8 +121,6 @@ def cmd_line_arg_filter():
 				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
 				print "submit script to execute in a different environment."
 				sys.exit(-1)
-				if re.match('.*other\=baremetal.*', i.next()):
-					sys.exit(-1)
 	except StopIteration:
 		pass
 
