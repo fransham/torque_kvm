@@ -118,7 +118,7 @@ def cmd_line_arg_filter():
 				sys.exit(-1)
 			elif arg == '-l':
 				if re.match('.*other=baremetal.*', i.next()):
-					sys.exit(0)
+					sys.exit(-1)
 	except StopIteration:
 		pass
 

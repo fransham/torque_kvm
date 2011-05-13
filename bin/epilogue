@@ -12,6 +12,7 @@ import libvirt
 import smtplib
 import os
 import sys
+import re
 
 try:
     import sqlite3
