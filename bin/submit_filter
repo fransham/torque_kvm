@@ -49,7 +49,7 @@ filters=[
 # The main function.  It all starts here!
 def main():
     # filter the command line arguments first:
-    cmd_line_arg_filter()
+#    cmd_line_arg_filter()
     
     #get the user's job script from STDIN
     data = sys.stdin.readlines()
