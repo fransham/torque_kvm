@@ -55,6 +55,7 @@ target_hostfile=torque_home+"/virt/"+jobid
 # check if we want a different image or a baremetal session:
 if re.match('.*other=.*', requested_resources):
         request = re.split(',',requested_resources.rstrip())
+	print "MATCH!!!!!"
 	vmname='somegarbagestring'
 	for resource in request:
 		if resource.startswith('other='):
