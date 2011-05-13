@@ -67,7 +67,7 @@ if re.match('.*other=.*', requested_resources):
 	if os.path.exists(imagedir+vmname+'.qcow2'):
 		imagefile=imagedir+vmname+'.qcow2'
 
-print '  imagefile:             '+imagefile
+print '  imagefile:           '+imagefile
 
 #clone the image:
 target=vmrundir+'/'+uuid
