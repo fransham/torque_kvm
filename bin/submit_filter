@@ -107,17 +107,19 @@ def cmd_line_arg_filter():
 				global userenvs
 				userenvs.extend(re.split(',',i.next()))
 			elif arg == '-l':
-				if re.match('.*mem\=.*', i.next()):
+				opt=i.next()
+				if re.match('.*mem\=.*', opt):
 					print "Sorry, memory cannot be specified on the command line."
 					print "Please add it to your submit script."
 					sys.exit(-1)
+				if re.match('.*other\=baremetal.*', opt):
+					sys.exit(0)
 			elif arg == '-S':
 				print "Cannot specify a shell."
 				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
 				print "submit script to execute in a different environment."
 				sys.exit(-1)
-			elif arg == '-l':
-				if re.match('.*other=baremetal.*', i.next()):
+				if re.match('.*other\=baremetal.*', i.next()):
 					sys.exit(-1)
 	except StopIteration:
 		pass
