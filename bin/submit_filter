@@ -189,15 +189,15 @@ def write_job(userjob):
 
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up, and the other commands will fail too.
-    print 'ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true" 2>&1 > /dev/null'
+    print 'ssh -q -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"'
 
     #the vm is online now.  Copy the env and job files.
-    print 'scp ${BASH_ENVS} ${TARGET_HOST}:/tmp/bash_environment 2>&1 > /dev/null'
-    print 'scp ${TCSH_ENVS} ${TARGET_HOST}:/tmp/tcsh_environment 2>&1 > /dev/null'
-    print 'scp ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID} 2>&1 > /dev/null'
+    print 'scp -q ${BASH_ENVS} ${TARGET_HOST}:/tmp/bash_environment '
+    print 'scp -q ${TCSH_ENVS} ${TARGET_HOST}:/tmp/tcsh_environment '
+    print 'scp -q ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID} '
 
     #make the job file execuable
-    print 'ssh ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}" 2>&1 > /dev/null'
+    print 'ssh -q ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}" '
 
     #run the job.  
     print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
