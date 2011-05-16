@@ -61,7 +61,7 @@ if re.match('.*other=.*', requested_resources):
 			vmname = re.split('=',resource)[1]
 			break
 	if vmname == 'baremetal':
-		print '  session type:       baremetal',
+		print '  session type:       baremetal'
 		print '''------------------------------------------------------------------'''		
 		sys.exit(0)
 	if os.path.exists(imagedir+vmname+'.qcow2'):
