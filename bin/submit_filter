@@ -197,10 +197,10 @@ def write_job(userjob):
     print 'scp -q ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID} '
 
     #make the job file execuable
-    print 'ssh -q ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}" '
+    print 'ssh -q ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
 
     #run the job.  
-    print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
+    print 'ssh -q ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
 
     #cleanup the job script
     print 'rm $TARGET_SCRIPT'
