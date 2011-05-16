@@ -14,27 +14,29 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   trap '{ echo destroying VM and exiting... ; exit 1; }' INT
 
   JOBFILE=/var/spool/torque/virt/${PBS_JOBID}
-  if [ ! -f ${JOBFILE} ]; then
-    echo "No job file present... exiting"
-    exit 1
-  fi
-  TARGET_HOST=`cat ${JOBFILE}`
-  if [ -z "$TARGET_HOST" ]; then
-    echo "Cannot find vm host name... exiting"
-    exit 1
-  fi
+  if [-f ${JOBFILE} ]; then
 
-  echo "Starting virtual machine... please wait"
+  	TARGET_HOST=`cat ${JOBFILE}`
+  	if [ -z "$TARGET_HOST" ]; then
+    	echo "Cannot find vm host name... exiting"
+    	exit 1
+  	fi
+
+  	echo "Starting virtual machine... please wait"
   
-  # stall to make sure the VM is online:
-  ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
+  	# stall to make sure the VM is online:
+  	ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
 
-  echo "VM is ready. Connecting..."
-  echo " "
+  	echo "VM is ready. Connecting..."
+  	echo " "
 
-  # connect to the VM:
-  ssh -t ${TARGET_HOST} "/bin/bash -i"
+  	# connect to the VM:
+  	ssh -t ${TARGET_HOST} "/bin/bash -i"
 
-  # exit when we're done.
-  exit 0
+  	# exit when we're done.
+  	exit 0
+  # we're running on the baremetal
+  else
+	echo "baremetal session started"
+  fi
 fi

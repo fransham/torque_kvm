@@ -17,13 +17,13 @@ if ($?PBS_ENVIRONMENT) then
 
   	setenv JOBFILE /var/spool/torque/virt/${PBS_JOBID}
   	if ( ! -e ${JOBFILE} ) then
-    	echo "No job file present... exiting"
-    	exit 1
+    	echo "Running on baremetal..."
+    	exit 0
   	endif
   	setenv TARGET_HOST `cat ${JOBFILE}`
   	if ( ! ($?TARGET_HOST) ) then
     	echo "Cannot find vm host name... exiting"
-    	exit 1
+    	logout
   	endif
 
   	echo "Starting virtual machine... please wait"
