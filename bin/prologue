@@ -97,12 +97,12 @@ c=conn.cursor()
 c.execute('select * from reservations where inuse = 0')
 
 try:
-        (host,ip,mac,inuse) = c.next()
+	(host,ip,mac,inuse) = c.next()
 except StopIteration:
-        print "no free network slots!"
+	print "no free network slots!"
 	os.rmdir(lockfile)
 	c.close()
-        sys.exit(1)
+	sys.exit(1)
 
 # update the db
 c.execute("update reservations set inuse = 1 where hostname=?",[host])
