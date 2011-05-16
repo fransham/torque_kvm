@@ -112,6 +112,7 @@ def cmd_line_arg_filter():
 					print "Please add it to your submit script."
 					sys.exit(-1)
 				elif re.match('.*other\=baremetal.*', opt):
+					print system_defaults
 					for line in sys.stdin.readlines():
 						print line
 					sys.exit(0)
