@@ -49,7 +49,7 @@ filters=[
 # The main function.  It all starts here!
 def main():
     # filter the command line arguments first:
-#    cmd_line_arg_filter()
+    cmd_line_arg_filter()
     
     #get the user's job script from STDIN
     data = sys.stdin.readlines()
@@ -125,26 +125,6 @@ def cmd_line_arg_filter():
 		pass
 
 
-# we don't want to run with large amounts of memory, since our job just runs ssh.
-# replace a memory request with one that's 100 times smaller.
-def memory_filter(tocheck):
-    newrequest = tocheck
-    if re.match('\#PBS\s+\-l.*mem=',tocheck):
-        resource = (re.split('\s+|,',tocheck.rstrip())[2:])
-        for request in resource:
-            if re.match('mem=',request):
-                old=request[4:]
-                suffix=old[-2:]
-                if re.match('^[g|G]',suffix):
-                        suffix="MB"
-                elif re.match('^[m|M]', suffix):
-                        suffix="KB"
-                else:
-                        "please specify a memory in MB or GB.  Your job will need at least 512MB to run properly"
-                        sys.exit(-1)
-                new=old[:-2]+"0"+suffix            
-        newrequest =  tocheck.replace(old, new)
-    return newrequest
     
 # find environment variables in job script:
 def environment_filter(tocheck):  
