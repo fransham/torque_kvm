@@ -14,7 +14,7 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   trap '{ echo destroying VM and exiting... ; exit 1; }' INT
 
   JOBFILE=/var/spool/torque/virt/${PBS_JOBID}
-  if [-f ${JOBFILE} ]; then
+  if [ -f ${JOBFILE} ]; then
 
   	TARGET_HOST=`cat ${JOBFILE}`
   	if [ -z "$TARGET_HOST" ]; then
