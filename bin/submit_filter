@@ -25,9 +25,8 @@ system_defaults='''
 #global variables
 torque_home="/var/spool/torque"
 target_host=torque_home+'/virt/${PBS_JOBID}'
-target_script=target_host+'.job'
-bash_envs=target_host+'.bash_envs'
-tcsh_envs=target_host+'.tcsh_envs'
+target_dir='/home/`whoami`/.torque-ltda/'
+target_script=target_dir+'${PBS_JOBID}.job'
 userenvs=[]
 pbs_directives=[]
 
@@ -152,58 +151,36 @@ def write_pbs_directives():
         print directive
 
 def write_targets():
-    print 'export TARGET_HOST=`cat '+target_host+'`'
-    print 'export TARGET_SCRIPT='+target_script	
-    print 'export BASH_ENVS='+bash_envs
-    print 'export TCSH_ENVS='+tcsh_envs
+	print 'mkdir -p '+target_dir
+	print 'export TARGET_HOST=`cat '+target_host+'`'
+	print 'export TARGET_SCRIPT='+target_script	
 
 
 #setup the job for the right environment
 def setup_job():
-	setup_job_csh()
-	setup_job_bash()
-      
-# write  job for bash shells:
-def setup_job_bash():
-    for var in envvars_to_job:
-        print 'echo export '+var+'=$'+var+' >> $BASH_ENVS'
-    for var in userenvs:
-        print 'echo export '+var+' >> $BASH_ENVS'
-
-
-#setup job for cshells 
-def setup_job_csh():
-    for var in envvars_to_job:
-        print 'echo setenv '+var+' $'+var+' >> $TCSH_ENVS'
-    for var in userenvs:
-        print 'echo setenv '+var.replace('=',' ')+' >> $TCSH_ENVS'
+	print 'JOB_ENVS="',
+	for var in envvars_to_job:
+		print var+'=$'+var+' ',
+	for var in userenvs:
+		print var+' ', 
+	print '"'
 
 #write the actual user's job 
 def write_job(userjob):
-    #switch to the correct initial directory
-    print 'echo cd $PBS_O_WORKDIR >> $TARGET_SCRIPT'
-    
+
     #write the user's script to the job file
-    for line in userjob:
-        print 'echo \''+line.replace('\'','\'\\\'\'').rstrip()+'\' >> $TARGET_SCRIPT'
+	for line in userjob:
+		print 'echo \''+line.replace('\'','\'\\\'\'').rstrip()+'\' >> $TARGET_SCRIPT'
+
+	print 'chmod 755 $TARGET_SCRIPT'
 
     #stall to make sure the VM has come online.  If it's not online after
-    #5 mins, it's probably not coming up, and the other commands will fail too.
-    print 'ssh -q -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"'
-
-    #the vm is online now.  Copy the env and job files.
-    print 'scp -q ${BASH_ENVS} ${TARGET_HOST}:/tmp/bash_environment '
-    print 'scp -q ${TCSH_ENVS} ${TARGET_HOST}:/tmp/tcsh_environment '
-    print 'scp -q ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID} '
-
-    #make the job file execuable
-    print 'ssh -q ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
-
-    #run the job.  
-    print 'ssh -q ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
+    #5 mins, it's probably not coming up.
+    #When it's alive, run the job in the proper environement.  
+	print 'ssh -q -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/env ${JOB_ENVS} ${TARGET_SCRIPT} "'
 
     #cleanup the job script
-    print 'rm $TARGET_SCRIPT'
+	print 'rm $TARGET_SCRIPT'
     
 if __name__ == "__main__":
     main()
