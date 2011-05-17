@@ -14,7 +14,7 @@ export TORQUE_HOME=/var/spool/torque
 SCRIPTDIR=$(cd `dirname $0` && echo `pwd`)
 
 rm -f /etc/torque-kvm.conf
-sed  "s#TO_BE_SET_BY_INSTALL_SCRIPT#$TORQUE_HOME#g" torque-kvm.conf > /etc/torque-kvm.conf
+sed  "s#TO_BE_SET_BY_INSTALL_SCRIPT#$TORQUE_HOME#g" $SCRIPTDIR/torque-kvm.conf > /etc/torque-kvm.conf
 
 mkdir -p $TORQUE_HOME/virt
 mkdir -p $TORQUE_HOME/net
