@@ -75,7 +75,6 @@ print '  imagefile:           '+imagefile
 
 #clone the image:
 target=vmrundir+'/'+uuid
-print target
 (ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
 if (ret != 0):
 	print "Error creating image.  Error message follows:" 
