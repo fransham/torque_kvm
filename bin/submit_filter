@@ -25,7 +25,7 @@ system_defaults='''
 #global variables
 torque_home="/var/spool/torque"
 target_host=torque_home+'/virt/${PBS_JOBID}'
-target_dir='/home/`whoami`/.torque-ltda/'
+target_dir='${PBS_O_HOME}/.torque-ltda/'
 target_script=target_dir+'${PBS_JOBID}.job'
 userenvs=[]
 pbs_directives=[]
