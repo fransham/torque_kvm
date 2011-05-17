@@ -1,0 +1,52 @@
+torque_ltda: a package to create virtual machines from regular torque batch jobs.
+
+
+Assumptions:
+
+1) A user home directory mounted on the baremetal worker nodes and on the virtual machines.
+2) Hostnames for the virtual machines that are resolvable from the worker nodes.
+3) Passwordless ssh between the worker nodes and VMs.  Use either public keys or HostbasedAuthentication.
+4) kvm, libvirt, python-libvirt, pysqlite2 (python <= 2.4) or sqlite3 (python > 2.4) installed on the worker nodes.
+5) A virtual machine image of qcow2 type mounted on nfs space.
+
+
+Worker node install:
+
+git clone git://github.com/fransham/torque_kvm.git
+cd torque_kvm
+
+If you installed TORQUE somewhere other than /var/spool/torque, set the value of TORQUE_HOME in install.sh
+
+When you run the install script, it will copy torque-kvm.conf to /etc/torque-kvm.conf.  Set the values in torque-kvm.conf for your local setup before running the install script.  You can change these values in /etc/torque-kvm.conf anytime after.
+
+Run the install script: ./install.sh
+
+Now, initialize your databases.  cd to $TORQUE_HOME/net/ and edit the network.conf file to replace the hostname/mac/ip settings with 
+those that you want.  Make sure you have unique hostname/mac/ip settings on each worker node.  Or, you can place the entire net directory on nfs space if you want a single, global map of hostname/mac/ip for the vms.    
+
+run ./initialize  
+
+This will generate two files: network.db (queried by the prologue/epilogue scripts) and dhcpd.entries.  The dhcpd.entries file is of the form that it can be included by your dhcpd server.
+
+A sample dhcp config looks like this:
+#
+# DHCP Server Configuration file.
+#
+ddns-update-style interim;
+subnet 172.23.0.0 netmask 255.255.0.0 {
+include "/etc/dhcpd.conf.d/wn001.dhcpd.entries";
+include "/etc/dhcpd.conf.d/wn002.dhcpd.entries";
+include "/etc/dhcpd.conf.d/wn003.dhcpd.entries";
+}
+Where the conf files generated on three worker nodes are placed in a dhcpd.conf.d directory and included.  
+
+
+Submit node install:
+
+The first few lines of bin/submit_filter contain site defaults.  Edit these to reflect your local policies. 
+
+On all submit nodes, copy bin/submit_filter to any directory you want.  The file has to be owned and executable by root, and not writable by anyone else.  Add the following line to /var/spool/torque/torque.cfg
+
+SUBMITFILTER /path/to/submit/filter
+
+

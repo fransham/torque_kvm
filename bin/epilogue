@@ -13,14 +13,17 @@ import smtplib
 import os
 import sys
 import re
+import ConfigParser
 
 try:
     import sqlite3
 except:
     from pysqlite2 import dbapi2 as sqlite3
 
-#parameters... hardcoded for now.
-torque_home="/var/spool/torque"
+#parameters.
+config = ConfigParser.ConfigParser()
+config.read('/etc/torque-kvm.conf')
+torque_home=config.get("torque","torque_home")
 dbfile=torque_home + "/net/network.db"
 
 

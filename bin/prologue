@@ -12,6 +12,7 @@ import os
 import time
 import libvirt
 import re
+import ConfigParser
 
 try:
     import sqlite3
@@ -43,11 +44,14 @@ TORQUE PROLOGUE:
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
 
-# some parameters, hardcoded for now:
-torque_home="/var/spool/torque"
-imagedir = "/opt/torque-ltda/images/"
-imagefile = imagedir+"bbr-ltda.qcow2"
-vmrundir = "/scratch/secureimages"
+#parameters
+config = ConfigParser.ConfigParser()
+config.read('/etc/torque-kvm.conf')
+torque_home=config.get("torque","torque_home")
+imagedir = config.get("virt", "imagedir")
+imagefile = config.get("virt", "imagefile")
+vmrundir = config.get("virt", "vmrundir")
+
 dbfile=torque_home + "/net/network.db"
 lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
@@ -55,7 +59,7 @@ target_hostfile=torque_home+"/virt/"+jobid
 # check if we want a different image or a baremetal session:
 if re.match('.*other=.*', requested_resources):
         request = re.split(',',requested_resources.rstrip())
-	vmname='somegarbagestring'
+	vmname=''
 	for resource in request:
 		if resource.startswith('other='):
 			vmname = re.split('=',resource)[1]
@@ -152,11 +156,17 @@ xmldesc="""<domain type='kvm'>
 """
 
 # Boot the vm
-lconn = libvirt.open(None)
-if lconn == None:
-    print 'Failed to open connection to the hypervisor'
-    sys.exit(1)
-dom = lconn.createLinux(xmldesc, 0)
+try:
+	lconn = libvirt.open(None)
+	dom = lconn.createLinux(xmldesc, 0)
+except:
+	print "Error creating virtual machine.  Is libvirtd running?"
+	c=conn.cursor()
+	c.execute("update reservations set inuse = 1 where hostname=?",[host])
+	conn.commit()
+	c.close()
+	sys.exit(1)
+
 if dom == None:
     print 'Virtual machine creation failed'
     sys.exit(1)

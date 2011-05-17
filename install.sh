@@ -6,10 +6,15 @@
 #
 #########################################################
 
+# set this parameter for your torque install on the worker node:
+export TORQUE_HOME=/var/spool/torque
+
+# nothing below should need to be changed.
+
 SCRIPTDIR=$(cd `dirname $0` && echo `pwd`)
 
-#set this parameter for your torque install on the worker node:
-TORQUE_HOME=/var/spool/torque
+rm -f /etc/torque-kvm.conf
+sed  "s#TO_BE_SET_BY_INSTALL_SCRIPT#$TORQUE_HOME#g" torque-kvm.conf > /etc/torque-kvm.conf
 
 mkdir -p $TORQUE_HOME/virt
 mkdir -p $TORQUE_HOME/net

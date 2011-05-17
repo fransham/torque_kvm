@@ -13,6 +13,9 @@
 import re
 import sys
 
+#where did you install torque?
+torque_home="/var/spool/torque"
+
 #customize any system defaults you want in here.
 #memory should be small, since all it's doing is running ssh
 system_defaults='''
@@ -23,7 +26,6 @@ system_defaults='''
 '''
 
 #global variables
-torque_home="/var/spool/torque"
 target_host=torque_home+'/virt/${PBS_JOBID}'
 target_dir='${PBS_O_HOME}/.torque-ltda/'
 target_script=target_dir+'${PBS_JOBID}.job'
