@@ -14,7 +14,7 @@
 
 LIBVIRT_CHECK=`ps  aux | grep libvirtd | grep -v grep | wc -l`
 
-if [ $LIBVIRT_CHECK -lt 2 ]; then
+if [ $LIBVIRT_CHECK -lt 1 ]; then
 	# libvirt isn't running.  Let's try to restart it:
 	/etc/init.d/libvirtd restart
 	# sleep 5 seconds to let it come online:
@@ -24,7 +24,7 @@ if [ $LIBVIRT_CHECK -lt 2 ]; then
 	# send me an e-mail so I can track the frequency:
 	echo "bad news..." > /tmp/message
 	mail -s "libvirtd crashed" "fransham@slac.stanford.edu" < /tmp/message 
-	if [ $LIBVIRT_CHECK -lt 2 ]; then
+	if [ $LIBVIRT_CHECK -lt 1 ]; then
 		#libvirt is really dead.  Report an error
 		echo "ERROR libvirt cannot be restarted"		
 		mail -s "libvirt cannot be restarted" "fransham@slac.stanford.edu" < /tmp/message 
