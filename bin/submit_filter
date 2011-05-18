@@ -100,7 +100,6 @@ def cmd_line_arg_filter():
 				global userenvs
 				for env in re.split(',',i.next()):
 					userenvs += ',' + env.split('=')[0] 
-					print userenvs
 			elif arg == '-l':
 				opt=i.next()
 				if re.match('.*mem\=.*', opt):
