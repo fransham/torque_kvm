@@ -27,7 +27,7 @@ cp -v $SCRIPTDIR/bin/mom_health_check.sh $TORQUE_HOME/mom_priv/mom_health_check.
 cp -v $SCRIPTDIR/net/initialize $TORQUE_HOME/net/
 cp -i -v $SCRIPTDIR/net/network.conf $TORQUE_HOME/net/
 cp -v $SCRIPTDIR/profile.d/torque-interactive.* /etc/profile.d/
-
+cp -v $SCRIPTDIR/bin/sshenv /usr/bin/
 
 echo "remember to run TORQUE_HOME/net/initialize to configure your database"
 

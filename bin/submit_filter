@@ -29,14 +29,10 @@ system_defaults='''
 target_host=torque_home+'/virt/${PBS_JOBID}'
 target_dir='${PBS_O_HOME}/.torque-ltda/'
 target_script=target_dir+'${PBS_JOBID}.job'
-userenvs=[]
 pbs_directives=[]
 
 #torque environment variables to send to the job
-envvars_to_job=("PBS_O_HOST","PBS_O_LOGNAME",
-    "PBS_O_HOME","PBS_O_WORKDIR","PBS_ENVIRONMENT",
-    "PBS_O_QUEUE","PBS_JOBID", "PBS_JOBNAME",
-    "PBS_NODEFILE")
+userenvs = "PBS_O_HOST,PBS_O_LOGNAME,PBS_O_HOME,PBS_O_WORKDIR,PBS_ENVIRONMENT,PBS_O_QUEUE,PBS_JOBID,PBS_JOBNAME,PBS_NODEFILE"
     
 # put your filters into this array to have them applied to the data
 # write any new filters you want and add them to this list.
@@ -65,9 +61,6 @@ def main():
     
     #set the job targets
     write_targets()
-    
-    #setup the job for the proper shell
-    setup_job()
     
     #write the user's job to a file:
     write_job(userjob)
@@ -105,7 +98,8 @@ def cmd_line_arg_filter():
 			arg = i.next()
 			if arg == '-v':
 				global userenvs
-				userenvs.extend(re.split(',',i.next()))
+				for env in re.split(',',i.next()):
+					userenvs += ',' + env.split('=')[0] 
 			elif arg == '-l':
 				opt=i.next()
 				if re.match('.*mem\=.*', opt):
@@ -131,7 +125,8 @@ def cmd_line_arg_filter():
 def environment_filter(tocheck):  
     if re.match('\#PBS\s+\-v',tocheck):
         global userenvs
-        userenvs.extend(re.split('\s+|,',tocheck.rstrip())[2:])     
+        for env in re.split('\s+|,',tocheck.rstrip())[2:]:
+			 userenvs += ',' + env.split('=')[0]  
     return tocheck
 
 #strip out all #PBS directives:
@@ -158,15 +153,6 @@ def write_targets():
 	print 'export TARGET_SCRIPT='+target_script	
 
 
-#setup the job for the right environment
-def setup_job():
-	print 'JOB_ENVS="',
-	for var in envvars_to_job:
-		print var+'=$'+var+' ',
-	for var in userenvs:
-		print var+' ', 
-	print '"'
-
 #write the actual user's job 
 def write_job(userjob):
 
@@ -179,7 +165,7 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'ssh -q -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/env ${JOB_ENVS} ${TARGET_SCRIPT} "'
+	print 'sshenv -Q -V '+userenvs+' -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
