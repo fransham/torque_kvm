@@ -1,0 +1,157 @@
+#!/usr/bin/python
+import sys, re, os, getopt
+
+prog=os.path.basename(sys.argv[0])
+
+def version():
+  version= '$Revision: 1.7 $'   # updated by CVS
+  return re.sub(r"\.(\d)\b",r".0\1",re.search(r"\d+(?:\.\d+)*",version).group())
+
+def shorthelp():
+  print "Use '"+prog+" -h' for help."
+  return 1
+
+def usage():
+  print prog,version(),"""- ssh passing environment variables
+
+Runs ssh allowing environment variables and working directory to be set
+from the client.
+
+USAGE:
+  """+prog+""" [OPTIONS] [USER@]HOST [COMMAND [ARGUMENTS]]
+
+OPTIONS can be ssh options (except ssh -S) or:
+  -h -?      display this help and exit
+  -Q         run command directly without a shell, quoting each argument separately
+  -V VAR     comma-separated list of variables to pass
+  -U VAR     comma-separated list of variables to unset
+  -V VAR=VAR set VAR to VAL
+  -W DIR     cd DIR
+  -WW        cd to the current working directory (assuming shared filesystem)
+  -S SSH     ssh command to use (default="ssh")
+  -v         verbose - show ssh command before executing it
+  -vv        extra verbose - run ssh -v
+  -d         debug - just show ssh command and exit
+
+EXAMPLE:
+  """+prog+""" -x -V DISPLAY -WW babar.rl.ac.uk emacs
+  # use client's X-display (assuming it contains the host name) and
+  # run emacs in the current directory (assuming it is available on the host)
+
+  """+prog+""" -V VAL=2 -W /tmp lxplus.cern.ch "pwd; printenv VAL"
+  # cd to /tmp and set VAL=2
+
+"""+prog+""" works for both Bourne and C-style shells and takes care of
+the appropriate quoting when passing variable values.
+
+AUTHOR: Tim Adye <T.J.Adye@rl.ac.uk>"""
+  return 0
+
+def quote(val):
+  """
+  Quote/escape a string in a safe way for either Bourne or C-style shells.
+  Use '', but do !' unquoted with escapes, except if we have 's and "" can be used, then do that.
+  C shell does not allow escaping $`" in "", but does allow escapes if unquoted.
+  """
+  if val=="":
+    return "''"
+  elif re.search(r"'",val) and not re.search(r"[!$`\\\"]",val):
+    return '"'+val+'"'
+  elif re.search(r"[][(){}<>;&|*?^!$`'\\\"\s]",val) or val[0]=="~" or re.search(r"[:=]~",val):
+    q= "'" + re.sub (r"([!']+)", (lambda m: "'"+re.sub(r"([!'])", r"\\\1", m.group(1))+"'"), val) + "'"
+    q= re.sub(r"^''","",q)
+    q= re.sub(r"''$","",q)
+    return q
+  return val
+
+def simple_quote(val):  # unused version: simpler alrgorithm, but often includes unnecessary quotes
+  """Quote/escape a string in a safe way for either Bourne or C-style shells"""
+  if val=="" or re.search(r"[][(){}<>;&|*?^!$`'\\\"\s]",val) or val[0]=="~" or re.search(r"[:=]~",val):
+    return "'"+re.sub(r"([!'])",r"'\\\1'",val)+"'"
+  return val
+
+def main():
+  myopt= dict([["-"+opt,1]           for opt in "h?dvQSVUW"])  # ssh -S -V overridden
+  try:
+    optlist, args= getopt.getopt (sys.argv[1:], "h?dvQS:V:U:W:1246AaCfgKkMNnqsTtvXxYb:c:D:e:F:i:L:l:m:O:o:p:R:w:")
+  except getopt.GetoptError, e:
+    print prog+":",e
+    return shorthelp()
+
+  ssh= []
+  opts= {}
+  for opt in optlist:
+    if opt[0]=="-v":
+      if "-v" in opts:
+        opts["-v"] += 1
+        ssh.append("-v")
+      else: opts["-v"]= 1
+    elif opt[0] in myopt:
+      opts[opt[0]]= opts.get(opt[0],[])+[opt[1]]
+    else:
+      ssh.append("".join(opt))
+
+  ssh= [opts.get("-S",["ssh"])[-1]]+ssh
+
+  if ("-h" in opts or "-?" in opts) or len(sys.argv)<=1:
+    return usage()
+
+  if not args:
+    print prog+": no host name specified"
+    return shorthelp()
+
+  if len(args)==1:
+    usercmd= ["$SHELL", "-l"]
+    ssh.append("-t")
+  elif "-Q" in opts:
+    usercmd= [" ".join([quote(arg) for arg in args[1:]])]
+  else:
+    usercmd= ["$SHELL", "-c", quote(" ".join(args[1:]))]
+
+  if "-W" in opts:
+    if opts["-W"][0]=="W" or opts["-W"][-1]=="":
+      cd= ["cd", quote(os.getcwd())+";"]   # -WW
+    else:
+      cd= ["cd", quote(opts["-W"][-1])+";"]
+  else:
+    cd= []
+
+  setenv=[]
+  unset=[]
+  for v in opts.get("-U",[]):
+    for vv in v.split(","):
+      unset.append("-u"+quote(vv))
+
+  for v in opts.get("-V",[]):
+    m= re.search(r"^(\w+|\S)=(.*)$",v)
+    if m:
+      k,e= m.groups()
+      if e!="": e=quote(e)
+      setenv.append(quote(k)+"="+e)
+    else:
+      for vv in v.split(","):
+        if vv in os.environ:
+          setenv.append(quote(vv)+"="+quote(os.environ[vv]))
+        else:
+          unset.append("-u"+quote(vv))
+
+  envopts= []
+  if unset:  envopts.append(" ".join(unset))
+  if setenv: envopts.append(" ".join(setenv))
+
+  ssh.append (args[0])
+  return cmd (ssh+cd+["exec","/bin/env"]+envopts+usercmd,
+              verbose=("-v" in opts), test=("-d" in opts))
+
+def cmd (argv, verbose=0, test=0):
+  if verbose or test: print "+"," ".join([quote(arg) for arg in argv])
+  if test:            return
+  sys.stdout.flush()
+  stat= os.execvp (argv[0], [os.path.basename(argv[0])]+argv[1:])
+  # only return if there's an error
+  exstat= (stat>>8)&255
+  if exstat==0: exstat= (stat&255)|128
+  return exstat
+
+if __name__ == "__main__":
+  sys.exit (main())
