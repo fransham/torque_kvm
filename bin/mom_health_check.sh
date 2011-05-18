@@ -12,7 +12,7 @@
 ##############################################################
 
 
-LIBVIRT_CHECK=`ps  aux | grep libvirtd | wc -l`
+LIBVIRT_CHECK=`ps  aux | grep libvirtd | grep -v grep | wc -l`
 
 if [ $LIBVIRT_CHECK -lt 2 ]; then
 	# libvirt isn't running.  Let's try to restart it:
@@ -20,7 +20,7 @@ if [ $LIBVIRT_CHECK -lt 2 ]; then
 	# sleep 5 seconds to let it come online:
 	sleep 5
 	# and check if it's running again:
-	LIBVIRT_CHECK=`ps  aux | grep libvirtd | wc -l`
+	LIBVIRT_CHECK=`ps  aux | grep libvirtd | grep -v grep | wc -l`
 	# send me an e-mail so I can track the frequency:
 	echo "bad news..." > /tmp/message
 	mail -s "libvirtd crashed" "fransham@slac.stanford.edu" < /tmp/message 
