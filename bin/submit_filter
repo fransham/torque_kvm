@@ -135,9 +135,9 @@ def check_envs(option, opt_str, value, parser):
 		print userenvs
 
 def check_resources(option, opt_str, value, parser):
-	if re.match('.*mem\=.*', opt):
+	if re.match('.*mem\=.*', value):
 		sys.exit(-1)
-	elif re.match('.*other\=baremetal.*', opt):
+	elif re.match('.*other\=baremetal.*', value):
 		print system_defaults
 		for line in sys.stdin.readlines():
 			print line
