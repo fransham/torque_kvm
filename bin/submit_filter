@@ -178,7 +178,7 @@ def write_targets(options):
 	print 'export TARGET_SCRIPT='+target_script	
 	if options.export_all:
 		print 'export ALLENVS=""'
-		print 'for userenv in `env | cut -d'=' -f1`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
+		print 'for userenv in `env | cut -d\'=\' -f1`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
 
 
 #write the actual user's job 
