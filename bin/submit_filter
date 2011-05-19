@@ -12,6 +12,7 @@
 
 import re
 import sys
+from optparse import OptionParser
 
 #where did you install torque?
 torque_home="/var/spool/torque"
@@ -33,6 +34,7 @@ pbs_directives=[]
 
 #torque environment variables to send to the job
 userenvs = "PBS_O_HOST,PBS_O_LOGNAME,PBS_O_HOME,PBS_O_WORKDIR,PBS_ENVIRONMENT,PBS_O_QUEUE,PBS_JOBID,PBS_JOBNAME,PBS_NODEFILE"
+
     
 # put your filters into this array to have them applied to the data
 # write any new filters you want and add them to this list.
@@ -92,33 +94,57 @@ def check_baremetal(userjob):
 #Reject -S flag.
 #if we want a baremetal session, just quit without doing anything.
 def cmd_line_arg_filter():
-	i = iter(sys.argv)
-	try:
-		while(True):
-			arg = i.next()
-			if arg == '-v':
-				global userenvs
-				for env in re.split(',',i.next()):
-					userenvs += ',' + env.split('=')[0] 
-			elif arg == '-l':
-				opt=i.next()
-				if re.match('.*mem\=.*', opt):
-					print "Sorry, memory cannot be specified on the command line."
-					print "Please add it to your submit script."
-					sys.exit(-1)
-				elif re.match('.*other\=baremetal.*', opt):
-					print system_defaults
-					for line in sys.stdin.readlines():
-						print line
-					sys.exit(0)
-			elif arg == '-S':
-				print "Cannot specify a shell."
-				print "Your job will execute in your default shell.  Add a #!/bin/SHELL to your"
-				print "submit script to execute in a different environment."
-				sys.exit(-1)
-	except StopIteration:
-		pass
+	#all qsub options have to be defined:
+	parser = OptionParser(add_help_option=False)
+	parser.add_option("-a", dest="date_time")
+	parser.add_option("-A", dest="account_string")
+	parser.add_option("-b", dest="seconds")
+	parser.add_option("-c", dest="checkpoint_opts")
+	parser.add_option("-C", dest="directive_prefix")
+	parser.add_option("-d", dest="path")
+	parser.add_option("-D", dest="rootpath")
+	parser.add_option("-e", dest="error_path")
+	parser.add_option("-f", action="store_true", dest="fault_tolerant")
+	parser.add_option("-h", action="store_true", dest="hold")
+	parser.add_option("-I", action="store_true", dest="interactive")
+	parser.add_option("-j", dest="join")
+	parser.add_option("-k", dest="keep")
+	parser.add_option("-l", type="string", action="callback", callback=check_resources)
+	parser.add_option("-m", dest="mail")
+	parser.add_option("-N", dest="name")
+	parser.add_option("-o", dest="outpath")
+	parser.add_option("-p", dest="priority")
+	parser.add_option("-P", dest="user_group")
+	parser.add_option("-q", dest="dest_queue")
+	parser.add_option("-r", dest="rerunnable")
+	parser.add_option("-S", type="string", action="callback", callback=check_shell)
+	parser.add_option("-t", dest="array")
+	parser.add_option("-u", dest="userlist")
+	parser.add_option("-v", type="string", action="callback", callback=check_envs)
+	parser.add_option("-V", action="store_true", dest="export_all")
+	parser.add_option("-W", dest="additional")
+	parser.add_option("-X", dest="enable_X11")
+	parser.add_option("-z", dest="quiet")
 
+	(options,args)=parser.parse_args()
+
+def check_envs(option, opt_str, value, parser):
+	for env in re.split(',',value):
+		global userenvs
+		userenvs += ',' + env.split('=')[0]
+		print userenvs
+
+def check_resources(option, opt_str, value, parser):
+	if re.match('.*mem\=.*', opt):
+		sys.exit(-1)
+	elif re.match('.*other\=baremetal.*', opt):
+		print system_defaults
+		for line in sys.stdin.readlines():
+			print line
+		sys.exit(0)
+
+def check_shell(option, opt_str, value, parser):
+	sys.exit(-1)
 
     
 # find environment variables in job script:
