@@ -21,8 +21,6 @@ torque_home="/var/spool/torque"
 #memory should be small, since all it's doing is running ssh
 system_defaults='''
 #PBS -l mem=16MB
-#PBS -l nodes=1 
-#PBS -l ncpus=1
 #PBS -S /bin/bash
 '''
 
@@ -118,7 +116,7 @@ def cmd_line_arg_filter():
 	parser.add_option("-q", dest="dest_queue")
 	parser.add_option("-r", dest="rerunnable")
 	parser.add_option("-S", type="string", action="callback", callback=check_shell)
-	parser.add_option("-t", dest="array")
+	parser.add_option("-t", dest="array_request")
 	parser.add_option("-u", dest="userlist")
 	parser.add_option("-v", type="string", action="callback", callback=check_envs)
 	parser.add_option("-V", action="store_true", dest="export_all")
