@@ -47,7 +47,7 @@ filters=[
 # The main function.  It all starts here!
 def main():
     # filter the command line arguments first:
-    cmd_line_arg_filter()
+    (options,args) = cmd_line_arg_filter()
     
     #get the user's job script from STDIN
     data = sys.stdin.readlines()
@@ -62,7 +62,7 @@ def main():
     write_pbs_directives()
     
     #set the job targets
-    write_targets()
+    write_targets(options)
     
     #write the user's job to a file:
     write_job(userjob)
@@ -126,13 +126,12 @@ def cmd_line_arg_filter():
 	parser.add_option("-X", dest="enable_X11")
 	parser.add_option("-z", dest="quiet")
 
-	(options,args)=parser.parse_args()
+	return parser.parse_args()
 
 def check_envs(option, opt_str, value, parser):
 	for env in re.split(',',value):
 		global userenvs
 		userenvs += ',' + env.split('=')[0]
-	print userenvs
 
 def check_resources(option, opt_str, value, parser):
 	if re.match('.*mem\=.*', value):
@@ -173,10 +172,13 @@ def write_pbs_directives():
     for directive in pbs_directives:
         print directive
 
-def write_targets():
+def write_targets(options):
 	print 'mkdir -p '+target_dir
 	print 'export TARGET_HOST=`cat '+target_host+'`'
 	print 'export TARGET_SCRIPT='+target_script	
+	if options.export_all:
+		print 'export ALLENVS=""'
+		print 'for userenv in `env | cut -d'=' -f1`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
 
 
 #write the actual user's job 
@@ -191,7 +193,7 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'sshenv -Q -V '+userenvs+' -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'sshenv -Q -V '+userenvs+'${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
