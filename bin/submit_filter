@@ -129,10 +129,10 @@ def cmd_line_arg_filter():
 	(options,args)=parser.parse_args()
 
 def check_envs(option, opt_str, value, parser):
-	print value
 	for env in re.split(',',value):
 		global userenvs
 		userenvs += ',' + env.split('=')[0]
+	print userenvs
 
 def check_resources(option, opt_str, value, parser):
 	if re.match('.*mem\=.*', value):
