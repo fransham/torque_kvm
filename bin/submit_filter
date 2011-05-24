@@ -167,12 +167,7 @@ def write_targets():
 
 
 #write the actual user's job 
-def write_job(userjob,options):
-
-	#check for initial path:
-	startpath=""
-	if options.path:
-		startpath='-WW'
+def write_job(userjob):
 
     #write the user's script to the job file
 	for line in userjob:
@@ -183,7 +178,7 @@ def write_job(userjob,options):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'sshenv '+startpath+' -Q -V ${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'sshenv -WW -Q -V ${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
