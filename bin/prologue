@@ -66,10 +66,10 @@ if re.match('.*other=.*', requested_resources):
 print '"'+keyword+'"'
 # get image path:
 request = config.get('resources','map')
-print request
 rules = request.split(';')
 imagefile = None
 for rule in rules:
+	print rule
 	sections = rule.strip().split(' ')
 	if ( ( sections[0] == queue or sections[0] == '%' ) and
 		 ( sections [1] == keyword or sections[1] == '%') and
