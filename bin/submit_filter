@@ -134,6 +134,8 @@ def check_resources(option, opt_str, value, parser):
 		sys.exit(0)
 
 def check_shell(option, opt_str, value, parser):
+	sys.stderr.write('\n Sorry, a different shell cannot be specified. ' )
+	sys.stderr.write(' Please change your default shell with ypchsh and retry.\n\n')
 	sys.exit(-1)
 
     
@@ -146,9 +148,10 @@ def pbs_directive_filter(tocheck):
     
 #check if the user wants a csh or tcsh
 def csh_shell_filter(tocheck):
-	if re.match('\#PBS\s+\-S.*csh',tocheck):
-		return '#PBS -S /bin/bash'
-	return tocheck
+	if re.match('\#PBS\s+\-S',tocheck):
+		sys.stderr.write('\n Sorry, a different shell cannot be specified. ' )
+		sys.stderr.write(' Please change your default shell with ypchsh and retry.\n\n')
+		sys.exit(-1)
         
 def write_pbs_directives():
     print system_defaults
