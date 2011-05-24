@@ -33,9 +33,10 @@ pbs_directives=[]
     
 # put your filters into this array to have them applied to the data
 # write any new filters you want and add them to this list.
-filters=[lambda x: pbs_directive_filter(x)]
-#		lambda x: csh_shell_filter(x),
-#         ]
+filters=[
+		lambda x: csh_shell_filter(x),
+		lambda x: pbs_directive_filter(x)
+         ]
 
 # The main function.  It all starts here!
 def main():
@@ -68,7 +69,7 @@ def apply_filters(data):
 		output = line.rstrip()
 		for filter in filters:
 			output = filter(output)
-			filtered_data.append(output)
+		filtered_data.append(output)
 	return filtered_data
 
 
