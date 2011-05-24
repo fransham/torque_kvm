@@ -35,9 +35,8 @@ pbs_directives=[]
 # write any new filters you want and add them to this list.
 filters=[
 		lambda x: csh_shell_filter(x),
-]
-#		lambda x: pbs_directive_filter(x)
-#         ]
+		lambda x: pbs_directive_filter(x)
+         ]
 
 # The main function.  It all starts here!
 def main():
@@ -65,8 +64,6 @@ def main():
     
 #apply the filters.
 def apply_filters(data):
-	if data:
-		sys.exit(-1)
 	filtered_data=[]
 	for line in data:
 		output = line.rstrip()
@@ -155,6 +152,7 @@ def csh_shell_filter(tocheck):
 		sys.stderr.write('\n Sorry, a different shell cannot be specified. ' )
 		sys.stderr.write(' Please change your default shell with ypchsh and retry.\n\n')
 		sys.exit(-1)
+	return tocheck
         
 def write_pbs_directives():
     print system_defaults
