@@ -63,7 +63,7 @@ if re.match('.*other=.*', requested_resources):
 		if resource.startswith('other='):
 			keyword = re.split('=',resource)[1]
 			break
-print '"'+keyword+'"'
+
 # get image path:
 request = config.get('resources','map')
 rules = request.split(';')
@@ -76,6 +76,7 @@ for rule in rules:
 		 ( sections [2] == userid or sections[2] == '%') and
 		 ( sections [3] == groupid or sections[3] == '%') ):
 		imagefile=sections[4].strip()
+		break
 
 #check if we want a baremetal session:
 if imagefile == None or imagefile == "None":
