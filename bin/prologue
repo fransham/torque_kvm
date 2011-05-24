@@ -140,7 +140,7 @@ xmldesc="""<domain type='kvm'>
   <currentMemory>2097152</currentMemory>
   <vcpu>1</vcpu>
   <os>
-    <type arch='x86_64' machine='rhel5.4.0'>hvm</type>
+    <type arch='i686'>hvm</type>
     <boot dev='hd'/>
   </os>
   <clock offset='utc'>
@@ -154,18 +154,13 @@ xmldesc="""<domain type='kvm'>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <source file='"""+target+"""'/>
-      <target dev='hda' bus='ide'/>
-      <address type='drive' controller='0' bus='0' unit='0'/>
+      <target dev='hda'/>
     </disk>
-    <controller type='ide' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
-    </controller>
     <interface type='bridge'>
       <mac address='"""+mac+"""'/>
       <source bridge='br0'/>
       <target dev='"""+uuid+"""-0'/>
       <model type='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </interface>
   </devices>
 </domain>
