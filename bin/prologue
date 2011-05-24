@@ -69,7 +69,6 @@ request = config.get('resources','map')
 rules = request.split(';')
 imagefile = None
 for rule in rules:
-	print rule
 	sections = rule.strip().split(' ')
 	if ( ( sections[0] == queue or sections[0] == '%' ) and
 		 ( sections [1] == keyword or sections[1] == '%') and
