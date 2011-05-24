@@ -142,10 +142,10 @@ def check_shell(option, opt_str, value, parser):
 #strip out all #PBS directives:
 def pbs_directive_filter(tocheck):
 	sys.stderr.write(tocheck)
-    if re.match('\#PBS',tocheck):
-        global pbs_directives
-        pbs_directives.extend([tocheck.rstrip()])
-    return tocheck
+	if re.match('\#PBS',tocheck):
+		global pbs_directives
+		pbs_directives.extend([tocheck.rstrip()])
+	return tocheck
     
 #check if the user wants a csh or tcsh
 def csh_shell_filter(tocheck):
