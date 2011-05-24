@@ -66,7 +66,7 @@ def main():
 #apply the filters.
 def apply_filters(data):
 	if not data:
-		return None
+		sys.exit(-1)
 	filtered_data=[]
 	for line in data:
 		output = line.rstrip()
