@@ -83,7 +83,7 @@ if imagepath == None or imagepath == "None":
 	sys.exit(0)
 
 if not os.path.exists(imagefile):
-	print ' Cannot file image file: '+imagefile.
+	print ' Cannot file image file: '+imagefile
 	sys.exit(1)
 
 print '  imagefile:           '+imagefile
