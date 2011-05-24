@@ -66,12 +66,13 @@ if re.match('.*other=.*', requested_resources):
 print '"'+keyword+'"'
 # get image path:
 request = config.get('resources','map')
+print request
 rules = request.split(';')
 imagefile = None
 for rule in rules:
 	sections = rule.strip().split(' ')
 	if ( ( sections[0] == queue or sections[0] == '%' ) and
-		 ( sections [1].strip() == keyword or sections[1] == '%') and
+		 ( sections [1] == keyword or sections[1] == '%') and
 		 ( sections [2] == userid or sections[2] == '%') and
 		 ( sections [3] == groupid or sections[3] == '%') ):
 		imagefile=sections[4].strip()
