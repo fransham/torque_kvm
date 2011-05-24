@@ -77,7 +77,7 @@ for rule in rules:
 		imagepath=sections[4]
 
 #check if we want a baremetal session:
-if imagepath == None or imagepath == "None"
+if imagepath == None or imagepath == "None":
 	print '  session type:        baremetal'
 	print '''------------------------------------------------------------------'''		
 	sys.exit(0)
