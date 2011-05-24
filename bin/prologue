@@ -74,7 +74,7 @@ for rule in rules:
 		 ( sections [1] == keyword or sections[1] == '%') and
 		 ( sections [2] == userid or sections[2] == '%') and
 		 ( sections [3] == groupid or sections[3] == '%') ):
-		imagefile=sections[4]
+		imagefile=sections[4].strip()
 
 #check if we want a baremetal session:
 if imagefile == None or imagefile == "None":
