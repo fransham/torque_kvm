@@ -63,7 +63,7 @@ if re.match('.*other=.*', requested_resources):
 		if resource.startswith('other='):
 			keyword = re.split('=',resource)[1]
 			break
-
+print keyword
 # get image path:
 request = config.get('resources','map')
 rules = request.split(';')
