@@ -67,17 +67,17 @@ if re.match('.*other=.*', requested_resources):
 # get image path:
 request = config.get('resources','map')
 rules = request.split(';')
-imagepath = None
+imagefile = None
 for rule in rules:
 	sections = rule.strip().split(' ')
 	if ( ( sections[0] == queue or sections[0] == '%' ) and
 		 ( sections [1] == keyword or sections[1] == '%') and
 		 ( sections [2] == userid or sections[2] == '%') and
 		 ( sections [3] == groupid or sections[3] == '%') ):
-		imagepath=sections[4]
+		imagefile=sections[4]
 
 #check if we want a baremetal session:
-if imagepath == None or imagepath == "None":
+if imagefile == None or imagefile == "None":
 	print '  session type:        baremetal'
 	print '''------------------------------------------------------------------'''		
 	sys.exit(0)
