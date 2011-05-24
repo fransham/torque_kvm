@@ -60,7 +60,7 @@ def main():
     write_targets()
     
     #write the user's job to a file:
-    write_job(userjob)
+    write_job(userjob,options)
 
     
 #apply the filters.
