@@ -178,7 +178,8 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'sshenv -WW -Q -V ${ALLENVS} -U HOME,HOSTNAME,PATH, -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	#print 'sshenv -WW -Q -V ${ALLENVS} -U HOME,HOSTNAME,PATH, -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'sshenv -Q -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
