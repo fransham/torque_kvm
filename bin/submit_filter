@@ -30,15 +30,11 @@ target_dir='${PBS_O_HOME}/.torque-ltda/'
 target_script=target_dir+'${PBS_JOBID}.job'
 pbs_directives=[]
 
-#torque environment variables to send to the job
-userenvs = "PBS_O_HOST,PBS_O_LOGNAME,PBS_O_HOME,PBS_O_WORKDIR,PBS_ENVIRONMENT,PBS_O_QUEUE,PBS_JOBID,PBS_JOBNAME,PBS_NODEFILE"
-
     
 # put your filters into this array to have them applied to the data
 # write any new filters you want and add them to this list.
 filters=[
-		 lambda x: csh_shell_filter(x),
-         lambda x: environment_filter(x),  
+		 lambda x: csh_shell_filter(x), 
          lambda x: pbs_directive_filter(x)
          ]
 
@@ -60,7 +56,7 @@ def main():
     write_pbs_directives()
     
     #set the job targets
-    write_targets(options)
+    write_targets()
     
     #write the user's job to a file:
     write_job(userjob)
@@ -118,7 +114,7 @@ def cmd_line_arg_filter():
 	parser.add_option("-S", type="string", action="callback", callback=check_shell)
 	parser.add_option("-t", dest="array_request")
 	parser.add_option("-u", dest="userlist")
-	parser.add_option("-v", type="string", action="callback", callback=check_envs)
+	parser.add_option("-v", dest='userenvs')
 	parser.add_option("-V", action="store_true", dest="export_all")
 	parser.add_option("-W", dest="additional")
 	parser.add_option("-X", dest="enable_X11")
@@ -126,13 +122,10 @@ def cmd_line_arg_filter():
 
 	return parser.parse_args()
 
-def check_envs(option, opt_str, value, parser):
-	for env in re.split(',',value):
-		global userenvs
-		userenvs += ',' + env.split('=')[0]
-
 def check_resources(option, opt_str, value, parser):
 	if re.match('.*mem\=.*', value):
+		sys.stderr.write(' Sorry, memory cannot be specified on the commmand line.' )
+		sys.stderr.write(' Please add it to your submit file and retry.')
 		sys.exit(-1)
 	elif re.match('.*other\=baremetal.*', value):
 		for line in sys.stdin.readlines():
@@ -143,14 +136,6 @@ def check_shell(option, opt_str, value, parser):
 	sys.exit(-1)
 
     
-# find environment variables in job script:
-def environment_filter(tocheck):  
-    if re.match('\#PBS\s+\-v',tocheck):
-        global userenvs
-        for env in re.split('\s+|,',tocheck.rstrip())[2:]:
-			 userenvs += ',' + env.split('=')[0]  
-    return tocheck
-
 #strip out all #PBS directives:
 def pbs_directive_filter(tocheck):
     if re.match('\#PBS',tocheck):
@@ -169,13 +154,11 @@ def write_pbs_directives():
     for directive in pbs_directives:
         print directive
 
-def write_targets(options):
+def write_targets():
 	print 'mkdir -p '+target_dir
 	print 'export TARGET_HOST=`cat '+target_host+'`'
-	print 'export TARGET_SCRIPT='+target_script	
-	if options.export_all:
-		print 'export ALLENVS=""'
-		print 'for userenv in `env | cut -d\'=\' -f1`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
+	print 'export TARGET_SCRIPT='+target_script
+	print 'for userenv in `env | cut -d\'=\' -f1`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
 
 
 #write the actual user's job 
@@ -190,7 +173,7 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'sshenv -Q -V '+userenvs+'${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'sshenv -Q -V ${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
