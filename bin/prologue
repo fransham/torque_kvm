@@ -20,7 +20,7 @@ except:
     from pysqlite2 import dbapi2 as sqlite3
 
 
-# prologue gets 3 arguments:
+# prologue gets 7 arguments:
 # 1 -- jobid
 # 2 -- userid
 # 3 -- grpid
@@ -30,6 +30,7 @@ except:
 # 7 -- job account
 jobid=sys.argv[1]
 userid=sys.argv[2]
+groupid=sys.argv[3]
 requested_resources=sys.argv[5]
 queue=sys.argv[6]
 
@@ -48,28 +49,42 @@ uuid='vm-'+bits[0]
 config = ConfigParser.ConfigParser()
 config.read('/etc/torque-kvm.conf')
 torque_home=config.get("torque","torque_home")
-imagedir = config.get("virt", "imagedir")
-imagefile = config.get("virt", "imagefile")
 vmrundir = config.get("virt", "vmrundir")
 
 dbfile=torque_home + "/net/network.db"
 lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
 
-# check if we want a different image or a baremetal session:
+# get keyword:
+keyword=''
 if re.match('.*other=.*', requested_resources):
-        request = re.split(',',requested_resources.rstrip())
-	vmname=''
+	request = re.split(',',requested_resources.rstrip())
 	for resource in request:
 		if resource.startswith('other='):
-			vmname = re.split('=',resource)[1]
+			keyword = re.split('=',resource)[1]
 			break
-	if vmname == 'baremetal':
-		print '  session type:        baremetal'
-		print '''------------------------------------------------------------------'''		
-		sys.exit(0)
-	if os.path.exists(imagedir+vmname+'.qcow2'):
-		imagefile=imagedir+vmname+'.qcow2'
+
+# get image path:
+request = config.get('resources','map')
+rules = request.split(';')
+imagepath = None
+for rule in rules:
+	sections = rule.strip().split(' ')
+	if ( ( sections[0] == queue or sections[0] == '%' ) and
+		 ( sections [1] == keyword or sections[1] == '%') and
+		 ( sections [2] == userid or sections[2] == '%') and
+		 ( sections [3] == groupid or sections[3] == '%') ):
+		imagepath=sections[4]
+
+#check if we want a baremetal session:
+if imagepath == None or imagepath == "None"
+	print '  session type:        baremetal'
+	print '''------------------------------------------------------------------'''		
+	sys.exit(0)
+
+if not os.path.exists(imagefile):
+	print ' Cannot file image file: '+imagefile.
+	sys.exit(1)
 
 print '  imagefile:           '+imagefile
 
