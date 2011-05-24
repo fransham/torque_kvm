@@ -35,8 +35,9 @@ pbs_directives=[]
 # write any new filters you want and add them to this list.
 filters=[
 		lambda x: csh_shell_filter(x),
-		lambda x: pbs_directive_filter(x)
-         ]
+]
+#		lambda x: pbs_directive_filter(x)
+#         ]
 
 # The main function.  It all starts here!
 def main():
