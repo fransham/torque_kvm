@@ -66,13 +66,13 @@ def main():
 def apply_filters(data):
 	if not data:
 		return None
-    filtered_data=[]
-    for line in data:
-        output = line.rstrip()
-        for filter in filters:
-            output = filter(output)
-        filtered_data.append(output)
-    return filtered_data
+	filtered_data=[]
+	for line in data:
+		output = line.rstrip()
+		for filter in filters:
+			output = filter(output)
+			filtered_data.append(output)
+	return filtered_data
 
 
 # check if the user requested a baremetal session.  This means that we don't filter the job at all.
