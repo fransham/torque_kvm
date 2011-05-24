@@ -135,7 +135,7 @@ xmldesc="""<domain type='kvm'>
   <devices>
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
+      <driver name='qemu' type='qcow2' cache='writeback'/>
       <source file='"""+target+"""'/>
       <target dev='hda' bus='ide'/>
       <address type='drive' controller='0' bus='0' unit='0'/>
