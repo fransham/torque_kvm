@@ -161,7 +161,7 @@ def write_job(userjob):
 	print 'chmod 755 $TARGET_SCRIPT'
 
 	#check if there's a hostname in the job file.  
-	print 'if [ -n "$TARGET_HOST" ]; then
+	print 'if [ -n "$TARGET_HOST" ]; then'
 	#we're in a VM session.
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
