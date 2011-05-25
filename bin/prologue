@@ -33,8 +33,20 @@ userid=sys.argv[2]
 groupid=sys.argv[3]
 requested_resources=sys.argv[5]
 queue=sys.argv[6]
+bits=jobid.split('.')
+uuid='vm-'+bits[0]
 
-print '''
+#parameters and global variables
+config = ConfigParser.ConfigParser()
+config.read('/etc/torque-kvm.conf')
+torque_home=config.get("torque","torque_home")
+vmrundir = config.get("virt", "vmrundir")
+dbfile=torque_home + "/net/network.db"
+conn=sqlite3.connect(dbfile)
+lockfile=torque_home + "/net/db.lock"
+target_hostfile=torque_home+"/virt/"+jobid
+hostname = None
+output_message= '''
 ------------------------------------------------------------------
 TORQUE PROLOGUE:
   jobid:               '''+jobid+'''
@@ -42,99 +54,123 @@ TORQUE PROLOGUE:
   requested resources: '''+requested_resources+'''
   queue:               '''+queue
 
-bits=jobid.split('.')
-uuid='vm-'+bits[0]
 
-#parameters
-config = ConfigParser.ConfigParser()
-config.read('/etc/torque-kvm.conf')
-torque_home=config.get("torque","torque_home")
-vmrundir = config.get("virt", "vmrundir")
 
-dbfile=torque_home + "/net/network.db"
-lockfile=torque_home + "/net/db.lock"
-target_hostfile=torque_home+"/virt/"+jobid
+def main():
+
+	#get imagepath from keyword and resource info:
+	imagepath = get_image_path(get_keyword())
+
+	#check if the imagepath is for a baremetal session:
+	check_image(imagepath)
+
+	#clone the backing image:
+	target = clone_image(imagepath)
+
+	#get free hostname/mac:
+	(hostname,mac) = get_host_mac()
+
+	#create the xml:
+	xmldesc = create_xml(target,mac)
+
+	# boot the vm:
+	boot_vm(xmldesc,hostname)
+
+	# write the job file:
+	write_jobfile(hostname)
+
+	#cleanup and exit:
+	finalize()
+	
 
 # get keyword:
-keyword=''
-if re.match('.*other=.*', requested_resources):
-	request = re.split(',',requested_resources.rstrip())
-	for resource in request:
-		if resource.startswith('other='):
-			keyword = re.split('=',resource)[1]
-			break
+def get_keyword():
+	if re.match('.*other=.*', requested_resources):
+		request = re.split(',',requested_resources.rstrip())
+		for resource in request:
+			if resource.startswith('other='):
+				keyword = re.split('=',resource)[1]
+				return keyword
+	return ""
 
 # get image path:
-request = config.get('resources','map')
-rules = request.split(';')
-imagefile = None
-for rule in rules:
-	sections = rule.strip().split(' ')
-	if ( ( sections[0] == queue or sections[0] == '%' ) and
-		 ( sections [1] == keyword or sections[1] == '%') and
-		 ( sections [2] == userid or sections[2] == '%') and
-		 ( sections [3] == groupid or sections[3] == '%') ):
-		imagefile=sections[4].strip()
-		break
+def get_image_path(keyword):
+	request = config.get('resources','map')
+	rules = request.split(';')
+	for rule in rules:
+		sections = rule.strip().split(' ')
+		if ( ( sections[0] == queue or sections[0] == '%' ) and
+			 ( sections [1] == keyword or sections[1] == '%') and
+			 ( sections [2] == userid or sections[2] == '%') and
+			 ( sections [3] == groupid or sections[3] == '%') ):
+			return sections[4].strip()
+			
 
-#check if we want a baremetal session:
-if imagefile == None or imagefile == "None":
-	print '  session type:        baremetal'
-	print '''------------------------------------------------------------------'''	
-	open(target_hostfile, 'w').close() 	
-	sys.exit(0)
+#check the image path.  Exit if it's for a baremetal session:
+def check_image(imagefile):
+	global output_message
+	if imagefile == None or imagefile == "None":
+		output_message += '''  session type:        baremetal
+------------------------------------------------------------------'''	
+		open(target_hostfile, 'w').close() 
+		do_exit()
 
-if not os.path.exists(imagefile):
-	print ' Cannot file image file: '+imagefile
-	sys.exit(1)
+	if not os.path.exists(imagefile):
+		do_exit_error( ' Cannot file image file: '+imagefile )
 
-print '  imagefile:           '+imagefile
+	output_message += '  imagefile:           '+imagefile
 
 #clone the image:
-target=vmrundir+'/'+uuid
-(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
-if (ret != 0):
-	print "Error creating image.  Error message follows:" 
-	print out
-	sys.exit(1)
+def clone_image():
+	target=vmrundir+'/'+uuid
+	(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
+	if (ret != 0):
+		 do_exit_error("Error creating image.  Error message follows: \n" + out) 
+	return target
 
 #get a lock on the database
-count=0
-while(count < 60):
+def lock_db():
+	count=0
+	while(count < 60):
+		try:
+			os.mkdir(lockfile)
+			break
+		except OSError:
+			time.sleep(1)
+			count+=1
+
+	if (count >= 60):
+		do_exit_error( "could not acquire lock on db... exiting." )
+
+#get a hostname and mac from the database
+def get_host_mac():
+	lock_db()
+	global conn
+	c=conn.cursor()
+	c.execute('select * from reservations where inuse = 0')
+
 	try:
-		os.mkdir(lockfile)
-		break
-	except OSError:
-		time.sleep(1)
-		count+=1
+		(host,ip,mac,inuse) = c.next()
+	except StopIteration:
+		do_exit_error( "no free network slots!" )
 
-if (count >= 60):
-	print "could not acquire lock on db... exiting."
-	sys.exit(1)
-
-#now we have an exclusive lock on the database, get an unused mac address:
-conn=sqlite3.connect(dbfile)
-c=conn.cursor()
-c.execute('select * from reservations where inuse = 0')
-
-try:
-	(host,ip,mac,inuse) = c.next()
-except StopIteration:
-	print "no free network slots!"
-	os.rmdir(lockfile)
+	# update the db
+	c.execute("update reservations set inuse = 1 where hostname=?",[host])
+	conn.commit()
 	c.close()
-	sys.exit(1)
 
-# update the db
-c.execute("update reservations set inuse = 1 where hostname=?",[host])
-conn.commit()
+	#release the lock
+	release_db_lock()
 
-#release the lock
-os.rmdir(lockfile)
-c.close()
+	#set the global var
+	global hostname
+	hostname = host
+
+	return (host,mac)
 
 # create the libvirt xml for our domain
-xmldesc="""<domain type='kvm'>
+def create_xml(target,mac):
+	xmldesc="""<domain type='kvm'>
   <name>"""+uuid+"""</name>
   <memory>2097152</memory>
   <currentMemory>2097152</currentMemory>
@@ -166,35 +202,64 @@ xmldesc="""<domain type='kvm'>
 </domain>
 
 """
+	return xmldesc
 
 # Boot the vm
-try:
-	lconn = libvirt.open(None)
-	dom = lconn.createLinux(xmldesc, 0)
-except:
-	print "Error creating virtual machine.  Is libvirtd running?"
-	c=conn.cursor()
-	c.execute("update reservations set inuse = 1 where hostname=?",[host])
-	conn.commit()
-	c.close()
-	sys.exit(1)
-
-if dom == None:
-    print 'Virtual machine creation failed'
-    sys.exit(1)
-
+def boot_vm(xmldesc):
+	try:
+		lconn = libvirt.open(None)
+		dom = lconn.createLinux(xmldesc, 0)
+		if dom == None:
+			do_exit_error("Failed to boot VM")
+	except:
+		do_exit_error("Failed to boot VM")	
+    
 
 # write the hostname of the booted vm to a file so that the
 # user's job can read it:
-print "  host:                " + host
-jobfile = open(target_hostfile,'w')
-jobfile.write(host)
-jobfile.close()
-os.chmod(target_hostfile,644)
+def write_jobfile(host):
+	jobfile = open(target_hostfile,'w')
+	jobfile.write(host)
+	jobfile.close()
+	os.chmod(target_hostfile,644)
 
-print '''------------------------------------------------------------------
+def finalize():
+	global output_message
+	output_message+= "  host:                " + host + '''
+------------------------------------------------------------------
 
 '''
+	do_exit()
 
-#vm created! 
-sys.exit(0)
+def release_db_lock():
+	try:		
+		os.rmdir(lockfile)	
+	except:
+		pass
+
+def do_exit():
+	print output_message
+	sys.exit(0)
+
+def do_exit_error( message ):
+	try:
+		lconn = libvirt.open(None)
+		dom = lconn.lookupByName(uuid)
+		dom.destroy()
+	except:
+		pass
+	if hostname:
+		global conn
+		c=conn.cursor()
+		c.execute("update reservations set inuse = 0 where hostname=?",[hostname])
+		conn.commit()
+		c.close()
+	release_db_lock()	
+	sys.stderr.write(message)
+	sys.exit(1)
+
+if __name__ == "__main__":
+	try:
+		main()
+	except  KeyboardInterrupt:
+		do_exit_error("Prologue interrupted")
