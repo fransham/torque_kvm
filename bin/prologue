@@ -222,7 +222,7 @@ def write_jobfile(host):
 
 def finalize():
 	global output_message
-	output_message+= "  host:                " + host + '''
+	output_message+= "  host:                " + hostname + '''
 ------------------------------------------------------------------
 
 '''
