@@ -52,7 +52,8 @@ TORQUE PROLOGUE:
   jobid:               '''+jobid+'''
   userid:              '''+userid+'''
   requested resources: '''+requested_resources+'''
-  queue:               '''+queue
+  queue:               '''+queue+'''
+'''
 
 
 
@@ -115,7 +116,7 @@ def check_image(imagefile):
 	if not os.path.exists(imagefile):
 		do_exit_error( ' Cannot file image file: '+imagefile )
 
-	output_message += '  imagefile:           '+imagefile
+	output_message += '  imagefile:           '+imagefile+"\n"
 
 #clone the image:
 def clone_image(imagefile):
