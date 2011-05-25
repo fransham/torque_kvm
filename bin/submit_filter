@@ -20,7 +20,6 @@ torque_home="/var/spool/torque"
 #customize any system defaults you want in here.
 #memory should be small, since all it's doing is running ssh
 system_defaults='''
-#PBS -l mem=16MB
 #PBS -S /bin/bash
 '''
 
