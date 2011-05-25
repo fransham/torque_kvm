@@ -148,7 +148,7 @@ def write_targets():
 	print 'mkdir -p '+target_dir
 	print 'export TARGET_HOST=`cat '+target_host+'`'
 	print 'export TARGET_SCRIPT='+target_script
-	print 'for userenv in `env | cut -d\'=\' -f1 | grep -v -E \'^HOST$|^HOSTNAME$|^HOME$|^NNTPSERVER$\'`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
+	print 'for userenv in `env | cut -d\'=\' -f1 | grep -v -E \'^HOST$|^HOSTNAME$|^HOME$|^NNTPSERVER$|^MANPATH$\'`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
 
 
 #write the actual user's job 
