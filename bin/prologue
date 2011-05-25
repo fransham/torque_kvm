@@ -111,6 +111,7 @@ def check_image(imagefile):
 		output_message += '''  session type:        baremetal
 ------------------------------------------------------------------'''	
 		open(target_hostfile, 'w').close() 
+		os.chmod(target_hostfile, 644)
 		do_exit()
 
 	if not os.path.exists(imagefile):

@@ -17,26 +17,24 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   if [ -f ${JOBFILE} ]; then
 
   	TARGET_HOST=`cat ${JOBFILE}`
-  	if [ -z "$TARGET_HOST" ]; then
-    	echo "Cannot find vm host name... exiting"
-    	exit 1
-  	fi
+  	if [ -n "$TARGET_HOST" ]; then
 
-  	echo "Starting virtual machine... please wait"
+  		echo "Starting virtual machine... please wait"
   
-  	# stall to make sure the VM is online:
-  	ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
+  		# stall to make sure the VM is online:
+  		ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
 
-  	echo "VM is ready. Connecting..."
-  	echo " "
+  		echo "VM is ready. Connecting..."
+  		echo " "
 
-  	# connect to the VM:
-  	ssh -t ${TARGET_HOST} "/bin/bash -i"
+  		# connect to the VM:
+  		ssh -t ${TARGET_HOST} "/bin/bash -i"
 
-  	# exit when we're done.
-  	exit 0
+  		# exit when we're done.
+  		exit 0
   # we're running on the baremetal
-  else
-	echo "baremetal session started"
+  	else
+		echo "baremetal session started"
+  	fi
   fi
 fi
