@@ -121,7 +121,7 @@ def check_image(imagefile):
 	output_message += '  imagefile:           '+imagefile
 
 #clone the image:
-def clone_image():
+def clone_image(imagefile):
 	target=vmrundir+'/'+uuid
 	(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
 	if (ret != 0):
