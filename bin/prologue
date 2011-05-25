@@ -80,7 +80,8 @@ for rule in rules:
 #check if we want a baremetal session:
 if imagefile == None or imagefile == "None":
 	print '  session type:        baremetal'
-	print '''------------------------------------------------------------------'''		
+	print '''------------------------------------------------------------------'''	
+	open(target_hostfile, 'w').close() 	
 	sys.exit(0)
 
 if not os.path.exists(imagefile):

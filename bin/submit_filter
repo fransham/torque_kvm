@@ -45,9 +45,6 @@ def main():
     
     #get the user's job script from STDIN
     data = sys.stdin.readlines()
-
-    #check if we want a baremetal session.  
-    check_baremetal(data)
     
     #apply the filters to the #PBS directives
     userjob = apply_filters(data)
@@ -72,14 +69,6 @@ def apply_filters(data):
 		filtered_data.append(output)
 	return filtered_data
 
-
-# check if the user requested a baremetal session.  This means that we don't filter the job at all.
-def check_baremetal(userjob):
-    for line in userjob:
-		if re.match('\#PBS\s+\-l.*other=baremetal',line):
-			for from_start in userjob:
-				print from_start
-			sys.exit(0)
 
 #filter the command line arguments first.  Check for
 #environment variables to pass to the job and memory request.   
@@ -128,10 +117,6 @@ def check_resources(option, opt_str, value, parser):
 		sys.stderr.write('\n Sorry, memory cannot be specified on the commmand line.' )
 		sys.stderr.write(' Please add it to your submit file and retry.\n\n')
 		sys.exit(-1)
-	elif re.match('.*other\=baremetal.*', value):
-		for line in sys.stdin.readlines():
-			print line
-		sys.exit(0)
 
 def check_shell(option, opt_str, value, parser):
 	sys.stderr.write('\n Sorry, a different shell cannot be specified. ' )
@@ -175,10 +160,17 @@ def write_job(userjob):
 
 	print 'chmod 755 $TARGET_SCRIPT'
 
+	#check if there's a hostname in the job file.  
+	print 'if [ -n "$TARGET_HOST" ]; then
+	#we're in a VM session.
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
 	print 'sshenv -WW -Q -V ${ALLENVS} -U HOME,HOSTNAME,PATH, -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'else'
+	#we're on baremetal.  Execute the job script in the user's shell.
+	print '${SHELL} ${TARGET_SCRIPT}'
+	print 'fi'
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
