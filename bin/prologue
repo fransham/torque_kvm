@@ -70,11 +70,8 @@ def main():
 	#get free hostname/mac:
 	(hostname,mac) = get_host_mac()
 
-	#create the xml:
-	xmldesc = create_xml(target,mac)
-
-	# boot the vm:
-	boot_vm(xmldesc,hostname)
+	#create the xml and boot the vm:
+	boot_vm(create_xml(target,mac))
 
 	# write the job file:
 	write_jobfile(hostname)
