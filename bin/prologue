@@ -193,7 +193,7 @@ def create_xml(target,mac):
     </disk>
     <interface type='bridge'>
       <mac address='"""+mac+"""'/>
-      <source bridge='br0'/>
+      <source bridge='br1'/>
       <target dev='"""+uuid+"""-0'/>
       <model type='virtio'/>
     </interface>
