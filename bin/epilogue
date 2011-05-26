@@ -25,7 +25,7 @@ config = ConfigParser.ConfigParser()
 config.read('/etc/torque-kvm.conf')
 torque_home=config.get("torque","torque_home")
 dbfile=torque_home + "/net/network.db"
-
+vmrundir = config.get("virt", "vmrundir")
 
 
 # epilogue gets 9 arguments:
@@ -102,7 +102,7 @@ conn.commit()
 c.close()
 
 #delete the image file
-os.remove("/scratch/secureimages/"+uuid)
+os.remove(vmrundir+'/'+uuid)
 
 #delete the job file and script:
 os.remove(target_hostfile)
