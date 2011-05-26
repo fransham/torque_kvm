@@ -68,17 +68,6 @@ bits=jobid.split('.')
 uuid='vm-'+bits[0]
 target_hostfile=torque_home+"/virt/"+jobid
 
-# check if we were in a baremetal session:
-if re.match('.*other=.*', requested_resources):
-        request = re.split(',',requested_resources.rstrip())
-	vmname='somegarbagestring'
-	for resource in request:
-		if resource.startswith('other='):
-			vmname = re.split('=',resource)[1]
-			break
-	if vmname == 'baremetal':
-		print '''------------------------------------------------------------------'''		
-		sys.exit(0)
 
 #destroy the vm
 conn = libvirt.open(None)
@@ -89,8 +78,9 @@ if conn == None:
 try:
     dom = conn.lookupByName(uuid)
 except:
-    print 'Failed to find the domain'
-    sys.exit(1)
+	# no vm for a baremetal session
+	print '''------------------------------------------------------------------'''
+    sys.exit(0)
 
 if dom.shutdown() != 0:
     print 'Failed to shutdown domain... destroying'
