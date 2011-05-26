@@ -80,7 +80,7 @@ try:
 except:
 	# no vm for a baremetal session
 	print '''------------------------------------------------------------------'''
-    sys.exit(0)
+	sys.exit(0)
 
 if dom.shutdown() != 0:
     print 'Failed to shutdown domain... destroying'
