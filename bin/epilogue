@@ -77,7 +77,7 @@ if conn == None:
 
 
 try:
-	dom = conn.lookupByName(uuid)
+    dom = conn.lookupByName(uuid)
 except:
 	# no vm for a baremetal session
 	print '''------------------------------------------------------------------'''
