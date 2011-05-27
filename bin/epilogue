@@ -78,7 +78,7 @@ if conn == None:
 
 try:
 	sys.stderr = open("/dev/null", 'a')
-    dom = conn.lookupByName(uuid)
+	dom = conn.lookupByName(uuid)
 	sys.stdout = sys.__stderr__  # restore stderr back to normal
 except:
 	# no vm for a baremetal session
