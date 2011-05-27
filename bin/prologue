@@ -185,7 +185,7 @@ def create_xml(target,mac,ncpus,mem):
 	xmldesc="""<domain type='kvm'>
   <name>"""+uuid+"""</name>
   <memory>"""+mem+"""</memory>
-  <vcpu>"""+ncpu+"""</vcpu>
+  <vcpu>"""+ncpus+"""</vcpu>
   <os>
     <type>hvm</type>
     <boot dev='hd'/>
