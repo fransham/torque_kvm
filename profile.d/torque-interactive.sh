@@ -20,6 +20,12 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   	if [ -n "$TARGET_HOST" ]; then
 
   		echo "Starting virtual machine... please wait"
+
+		# get all environment variables:
+		for userenv in `env | grep -v -E '^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY='`
+			do 
+				export ALLENVS=${ALLENVS}' -V '$userenv 
+			done
   
   		# stall to make sure the VM is online:
   		ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
@@ -28,7 +34,7 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   		echo " "
 
   		# connect to the VM:
-  		ssh -t ${TARGET_HOST} "/bin/bash -i"
+  		sshenv ${ALLENVS} -q -t ${TARGET_HOST} "/bin/bash -i"
 
   		# exit when we're done.
   		exit 0
