@@ -69,10 +69,13 @@ def main():
 	target = clone_image(imagepath)
 
 	#get free hostname/mac:
-	(hostname,mac) = get_host_mac()
+	(host,mac) = get_host_mac()
+
+	#get the number of cpus requested:
+	ncpus = get_ncpus()
 
 	#create the xml and boot the vm:
-	boot_vm(create_xml(target,mac))
+	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))))
 
 	# write the job file:
 	write_jobfile(hostname)
@@ -83,12 +86,22 @@ def main():
 
 # get keyword:
 def get_keyword():
-	if re.match('.*other=.*', requested_resources):
+	return parse_resources('other')
+
+def get_ncpus():
+	return parse_resources('ncpus')
+
+def get_memory(num_cpus):
+	mempercore = config.getint("virt","mempercore")
+	return str( num_cpus * mempercore)	
+
+def parse_resources(tofind):
+	if re.match('.*'+tofind+'=.*', requested_resources):
 		request = re.split(',',requested_resources.rstrip())
 		for resource in request:
-			if resource.startswith('other='):
-				keyword = re.split('=',resource)[1]
-				return keyword
+			if resource.startswith(tofind+'='):
+				match = re.split('=',resource)[1]
+				return match
 	return ""
 
 # get image path:
@@ -168,22 +181,15 @@ def get_host_mac():
 	return (host,mac)
 
 # create the libvirt xml for our domain
-def create_xml(target,mac):
+def create_xml(target,mac,ncpus,mem):
 	xmldesc="""<domain type='kvm'>
   <name>"""+uuid+"""</name>
-  <memory>2097152</memory>
-  <currentMemory>2097152</currentMemory>
-  <vcpu>1</vcpu>
+  <memory>"""+mem+"""</memory>
+  <vcpu>"""+ncpu+"""</vcpu>
   <os>
-    <type arch='i686'>hvm</type>
+    <type>hvm</type>
     <boot dev='hd'/>
   </os>
-  <clock offset='utc'>
-    <timer name='pit' tickpolicy='delay'/>
-  </clock>
-  <on_poweroff>destroy</on_poweroff>
-  <on_reboot>restart</on_reboot>
-  <on_crash>destroy</on_crash>
   <devices>
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type='file' device='disk'>
