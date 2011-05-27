@@ -75,8 +75,6 @@ if conn == None:
     print 'Failed to open connection to the hypervisor'    
     sys.exit(1)
 
-domains = conn.listDomains()
-print domains
 
 try:
     dom = conn.lookupByName(uuid)
