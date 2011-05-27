@@ -93,7 +93,7 @@ def get_ncpus():
 
 def get_memory(num_cpus):
 	mempercore = config.getint("virt","mempercore")
-	return str( num_cpus * mempercore)	
+	return str( num_cpus * mempercore * 1048)	
 
 def parse_resources(tofind):
 	if re.match('.*'+tofind+'=.*', requested_resources):
