@@ -90,7 +90,7 @@ def get_keyword():
 
 def get_ncpus():
 	ncpus = parse_resources('ncpus')
-	if npus:
+	if ncpus:
 		return ncpus
 	return '1'
 
