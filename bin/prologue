@@ -175,7 +175,7 @@ def create_xml(target,mac):
   <currentMemory>2097152</currentMemory>
   <vcpu>1</vcpu>
   <os>
-    <type arch='i686'>hvm</type>
+    <type>hvm</type>
     <boot dev='hd'/>
   </os>
   <clock offset='utc'>
