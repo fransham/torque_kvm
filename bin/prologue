@@ -89,7 +89,10 @@ def get_keyword():
 	return parse_resources('other')
 
 def get_ncpus():
-	return parse_resources('ncpus')
+	ncpus = parse_resources('ncpus')
+	if npus:
+		return ncpus
+	return '1'
 
 def get_memory(num_cpus):
 	mempercore = config.getint("virt","mempercore")
