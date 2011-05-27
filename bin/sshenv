@@ -140,7 +140,7 @@ def main():
   if setenv: envopts.append(" ".join(setenv))
 
   ssh.append (args[0])
-  return cmd (ssh+cd+["exec","/bin/env"]+envopts+usercmd,
+  return cmd (ssh+cd+["exec","/usr/bin/env"]+envopts+usercmd,
               verbose=("-v" in opts), test=("-d" in opts))
 
 def cmd (argv, verbose=0, test=0):
