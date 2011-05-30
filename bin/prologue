@@ -206,7 +206,6 @@ def create_xml(target,mac,ncpus,mem):
       <target dev='"""+uuid+"""-0'/>
       <model type='virtio'/>
     </interface>
-  <graphics type='vnc' port='-1' autoport='yes' keymap='en-us'/>
   </devices>
 </domain>
 
