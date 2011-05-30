@@ -190,7 +190,7 @@ def create_xml(target,mac,ncpus,mem):
   <memory>"""+mem+"""</memory>
   <vcpu>"""+ncpus+"""</vcpu>
   <os>
-    <type arch='i686'>hvm</type>
+    <type>hvm</type>
     <boot dev='hd'/>
   </os>
   <devices>
