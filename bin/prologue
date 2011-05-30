@@ -207,10 +207,6 @@ def create_xml(target,mac,ncpus,mem):
       <model type='virtio'/>
     </interface>
   </devices>
-  <cpu match='minimum'>
-	<model>qemu32</model>
-  </cpu>
-
 </domain>
 
 """
