@@ -148,7 +148,7 @@ def write_targets():
 	print 'mkdir -p '+target_dir
 	print 'export TARGET_HOST=`cat '+target_host+'`'
 	print 'export TARGET_SCRIPT='+target_script
-	print 'for userenv in `env | cut -d\'=\' -f1 | grep -v -E \'^HOSTNAME$|^ENVIRONMENT$|^HOST$|^WORKDIR$|^PWD$|^_$|^TMPDIR$|^TMP$|^SSH_|^DISPLAY$\'`;do export ALLENVS=${ALLENVS}\',\'$userenv; done'
+	print 'for userenv in `env | grep -v -E \'^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY=\'`;do export ALLENVS=${ALLENVS}\' -V  "\'$userenv\'"\'; done'
 
 
 #write the actual user's job 
@@ -166,7 +166,7 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'sshenv -V ${ALLENVS} -Q -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'sshenv ${ALLENVS} -Q -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 	print 'else'
 	#we're on baremetal.  Execute the job script in the user's shell.
 	print '${SHELL} ${TARGET_SCRIPT}'
