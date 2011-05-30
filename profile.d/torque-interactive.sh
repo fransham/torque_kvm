@@ -22,7 +22,7 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   		echo "Starting virtual machine... please wait"
 
 		# get all environment variables:
-		for userenv in `env | grep -v -E '^HOME=|^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY='`
+		for userenv in `env | grep -v -E '^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY='`
 			do 
 				export ALLENVS=${ALLENVS}' -V '$userenv 
 			done
