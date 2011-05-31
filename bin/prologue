@@ -113,7 +113,7 @@ def parse_resources(tofind):
 	if re.match('.*'+tofind+'=.*', requested_resources):
 		request = re.split(',',requested_resources.rstrip())
 		for resource in request:
-			if resource.startswith(tofind+'='):
+			if re.match(tofind+'=',resource):
 				match = re.split('=',resource)[-1]
 				return match
 	return ""
