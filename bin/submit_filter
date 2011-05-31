@@ -177,6 +177,7 @@ def write_job(userjob):
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
+	print 'rm ${HOME}/.torque-ltda/${PBS_JOBID}'
     
 if __name__ == "__main__":
     main()

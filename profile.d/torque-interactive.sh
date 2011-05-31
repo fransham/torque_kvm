@@ -22,10 +22,14 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
   		echo "Starting virtual machine... please wait"
 
 		# get all environment variables:
-		for userenv in `env | grep -v -E '^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY='`
+		for userenv in `env | grep -v -E '^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY=|PBS_NODEFILE='`
 			do 
 				export ALLENVS=${ALLENVS}' -V '$userenv 
 			done
+		#copy the generated nodefile:
+		cp /opt/torque-ltda/hostfiles/${PBS_JOBID} ${HOME}/.torque-ltda/${PBS_JOBID}
+		chmod 644 ${HOME}/.torque-ltda/${PBS_JOBID}
+		export ALLENVS=${ALLENVS}' -V PBS_NODEFILE='${HOME}/.torque-ltda/${PBS_JOBID}
   
   		# stall to make sure the VM is online:
   		ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
@@ -35,6 +39,9 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
 
   		# connect to the VM:
   		sshenv ${ALLENVS} -q -t ${TARGET_HOST} "/bin/bash -i"
+
+		#cleanup
+		rm ${HOME}/.torque-ltda/${PBS_JOBID}
 
   		# exit when we're done.
   		exit 0
