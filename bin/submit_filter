@@ -166,8 +166,9 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'cp /opt/torque-ltda/hostfiles/$PBS_JOBID ~/.torque-ltda/${PBS_JOBID}.hosts'
-	print 'export ALLENVS=${ALLENVS}\' -V  \'PBS_NODEFILE=~/.torque-ltda/${PBS_JOBID}.hosts'
+	print 'cp /opt/torque-ltda/hostfiles/$PBS_JOBID ${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
+	print 'chmod 644 ${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
+	print 'export ALLENVS=${ALLENVS}\' -V  \'PBS_NODEFILE=${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
 	print 'sshenv ${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
 	print 'else'
 	#we're on baremetal.  Execute the job script in the user's shell.
