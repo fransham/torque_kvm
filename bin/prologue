@@ -93,11 +93,11 @@ def get_keyword():
 
 # check if this is a parallel job, and return the appropriate # of cpus
 def check_parallel():
-	if os.path.basename(__file__) == 'prologue.parallel':
-		while not os.path.exists(shared_hostfile):
-			time.sleep(1)
-	else:
+	if os.path.exists(torque_home+'/aux/'+jobid):
 		shutil.copy(torque_home+'/aux/'+jobid,shared_hostfile)
+
+	while not os.path.exists(shared_hostfile):
+		time.sleep(1)
 	
 	hostfile = open(shared_hostfile,'r')
 	target_nodes = hostfile.readlines()
