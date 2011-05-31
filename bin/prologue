@@ -116,7 +116,7 @@ def check_parallel():
 			ncpus += 1
 	if ncpus < 1:
 		do_exit_error("Error parsing hosts_file")
-	return ncpus
+	return str(ncpus)
 
 def get_memory(num_cpus):
 	mempercore = config.getint("virt","mempercore")
