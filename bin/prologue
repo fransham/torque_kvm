@@ -93,7 +93,7 @@ def get_keyword():
 
 # check if this is a parallel job, and return the appropriate # of cpus
 def check_parallel():
-	if os.path.basename(__file__) == 'prologue.parallel'
+	if os.path.basename(__file__) == 'prologue.parallel':
 		while not os.path.exists(shared_hostfile)
 			time.sleep(1)
 	else:
