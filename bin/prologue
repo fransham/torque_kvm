@@ -13,6 +13,7 @@ import time
 import libvirt
 import re
 import ConfigParser
+import shutil
 
 try:
     import sqlite3
@@ -45,6 +46,7 @@ dbfile=torque_home + "/net/network.db"
 conn=sqlite3.connect(dbfile)
 lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
+shared_hostfile = config.get('virt','shared_hostfile_dir')+'/'+jobid
 hostname = None
 output_message= '''
 ------------------------------------------------------------------
@@ -59,6 +61,10 @@ TORQUE PROLOGUE:
 
 def main():
 
+	#check if this is a parallel job, and return the number
+	#of cores the VM should have:
+	ncpus = check_parallel()
+
 	#get imagepath from keyword and resource info:
 	imagepath = get_image_path(get_keyword())
 
@@ -71,14 +77,11 @@ def main():
 	#get free hostname/mac:
 	(host,mac) = get_host_mac()
 
-	#get the number of cpus requested:
-	ncpus = get_ncpus()
-
 	#create the xml and boot the vm:
 	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))))
 
 	# write the job file:
-	write_jobfile(hostname)
+	write_jobfiles(hostname,ncpus)
 
 	#cleanup and exit:
 	finalize()
@@ -88,11 +91,31 @@ def main():
 def get_keyword():
 	return parse_resources('other')
 
-def get_ncpus():
-	ncpus = parse_resources('ncpus')
-	if ncpus:
-		return ncpus
-	return '1'
+# check if this is a parallel job, and return the appropriate # of cpus
+def check_parallel():
+	if os.path.basename(__file__) == 'prologue.parallel'
+		while not os.path.exists(shared_hostfile)
+			time.sleep(1)
+	else:
+		shutil.copy(torque_home+'/aux/'+jobid,shared_hostfile)
+	
+	hostfile = open(shared_hostfile,'r')
+	target_nodes = hostfile.readlines()
+
+	if len(target_nodes) == 1:
+		ncpus = parse_resources('ncpus')
+		if ncpus:
+			return ncpus
+		return '1'
+
+	ncpus = 0; 
+	current_hostname = os.uname()[1]
+	for host in target_nodes:
+		if host == current_hostname:
+			ncpus += 1
+	if ncpus < 1:
+		do_exit_error("Error parsing hosts_file")
+	return ncpus
 
 def get_memory(num_cpus):
 	mempercore = config.getint("virt","mempercore")
@@ -224,12 +247,17 @@ def boot_vm(xmldesc):
     
 
 # write the hostname of the booted vm to a file so that the
-# user's job can read it:
-def write_jobfile(host):
+# user's job can read it.  Create a second mpi-style hostfile
+# for mpi jobs
+def write_jobfiles(host,ncpus):
 	jobfile = open(target_hostfile,'w')
 	jobfile.write(host)
 	jobfile.close()
 	os.chmod(target_hostfile,644)
+	jobfile2 = open(shared_hostfile+'.vm', 'a');
+	jobfile2.write(host+' slots='+ncpus+'\n')
+	jobfile2.close
+	os.chmod(shared_hostfile+'.vm', 644)
 
 def finalize():
 	global output_message
