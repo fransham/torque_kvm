@@ -63,7 +63,7 @@ def main():
 
 	#check if this is a parallel job, and return the number
 	#of cores the VM should have:
-	ncpus = check_parallel()
+	ncpus = get_cpus()
 
 	#get imagepath from keyword and resource info:
 	imagepath = get_image_path(get_keyword())
@@ -92,30 +92,18 @@ def get_keyword():
 	return parse_resources('other')
 
 # check if this is a parallel job, and return the appropriate # of cpus
-def check_parallel():
-	if os.path.exists(torque_home+'/aux/'+jobid):
-		shutil.copy(torque_home+'/aux/'+jobid,shared_hostfile)
+def get_cpus():
 
-	while not os.path.exists(shared_hostfile):
-		time.sleep(1)
-	
-	hostfile = open(shared_hostfile,'r')
-	target_nodes = hostfile.readlines()
+	ncpus = parse_resources('nodes=.*ppn')
+	if ncpus:
+		return ncpus
 
-	if len(target_nodes) == 1:
-		ncpus = parse_resources('ncpus')
-		if ncpus:
-			return ncpus
-		return '1'
+	ncpus = parse_resources('ncpus')
+	if ncpus:
+		return ncpus
 
-	ncpus = 0; 
-	current_hostname = os.uname()[1].strip()
-	for host in target_nodes:
-		if host.strip() == current_hostname:
-			ncpus += 1
-	if ncpus < 1:
-		do_exit_error("Error parsing hosts_file")
-	return str(ncpus)
+	return '1'
+
 
 def get_memory(num_cpus):
 	mempercore = config.getint("virt","mempercore")
@@ -126,7 +114,7 @@ def parse_resources(tofind):
 		request = re.split(',',requested_resources.rstrip())
 		for resource in request:
 			if resource.startswith(tofind+'='):
-				match = re.split('=',resource)[1]
+				match = re.split('=',resource)[-1]
 				return match
 	return ""
 
@@ -254,7 +242,7 @@ def write_jobfiles(host,ncpus):
 	jobfile.write(host)
 	jobfile.close()
 	os.chmod(target_hostfile,644)
-	jobfile2 = open(shared_hostfile+'.vm', 'a');
+	jobfile2 = open(shared_hostfile, 'a');
 	jobfile2.write(host+' slots='+ncpus+'\n')
 	jobfile2.close
 	os.chmod(shared_hostfile+'.vm', 644)
