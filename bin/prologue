@@ -245,7 +245,7 @@ def write_jobfiles(host,ncpus):
 	jobfile2 = open(shared_hostfile, 'a');
 	jobfile2.write(host+' slots='+ncpus+'\n')
 	jobfile2.close
-	os.chmod(shared_hostfile+'.vm', 644)
+	os.chmod(shared_hostfile, 644)
 
 def finalize():
 	global output_message
