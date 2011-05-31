@@ -111,6 +111,7 @@ def check_parallel():
 	ncpus = 0; 
 	current_hostname = os.uname()[1]
 	for host in target_nodes:
+		print host+"  "+current_hostname
 		if host == current_hostname:
 			ncpus += 1
 	if ncpus < 1:
