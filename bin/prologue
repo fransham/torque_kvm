@@ -102,7 +102,7 @@ def main():
 	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))), host)
 
 	# write the job file:
-	write_jobfiles(hostname,ncpus)
+	write_jobfiles(host,ncpus)
 
 	#cleanup and exit:
 	finalize()
