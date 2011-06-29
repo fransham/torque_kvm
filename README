@@ -8,6 +8,7 @@ Assumptions:
 3) Passwordless ssh between the worker nodes and VMs.  Use either public keys or HostbasedAuthentication.
 4) kvm, libvirt, python-libvirt, pysqlite2 (python <= 2.4) or sqlite3 (python > 2.4) installed on the worker nodes.
 5) A virtual machine image of qcow2 type mounted on nfs space.
+6) Virtual machine has a /bin/env command (create symlink if env is installed in a different location, such as /usr/bin/env)
 
 
 Worker node install:
