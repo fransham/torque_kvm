@@ -75,7 +75,7 @@ def main():
 	ncpus = get_ncpus()
 
 	#create the xml and boot the vm:
-	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))))
+	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus)), get_scratch()))
 
 	# write the job file:
 	write_jobfile(hostname)
@@ -183,8 +183,18 @@ def get_host_mac():
 
 	return (host,mac)
 
+def get_scratch():
+	scratch = None
+	try:
+		scratch = config.get('resources', 'shared_device')
+	except ConfigParser.NoOptionError:
+		pass
+	return scratch
+
+
+
 # create the libvirt xml for our domain
-def create_xml(target,mac,ncpus,mem):
+def create_xml(target,mac,ncpus,mem,scratch):
 	xmldesc="""<domain type='kvm'>
   <name>"""+uuid+"""</name>
   <memory>"""+mem+"""</memory>
@@ -200,7 +210,16 @@ def create_xml(target,mac,ncpus,mem):
       <source file='"""+target+"""'/>
       <target dev='hda'/>
     </disk>
-    <interface type='bridge'>
+    """
+    if scratch:
+		xmldesc += """
+    <disk type='file'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='"""+scratch+"""' bus='virtio'/>
+      <target dev='hdb'/>
+    </disk>
+    """
+	xmldesc += """<interface type='bridge'>
       <mac address='"""+mac+"""'/>
       <source bridge='br0'/>
       <target dev='"""+uuid+"""-0'/>
