@@ -20,6 +20,27 @@ try:
 except:
     from pysqlite2 import dbapi2 as sqlite3
 
+import subprocess
+from threading import Thread
+
+
+
+# This class is used to wait for a host to become online.
+# It will simply attempt to ping it every 1s, until ping
+# returns successfully (exit code 0).
+class PingWaiter(Thread):
+    def __init__(self, host):
+        Thread.__init__(self)
+        self.host = host
+
+    def run(self):
+        while True:
+            retcode = subprocess.call(['ping','-n','-c','1',self.host])
+            if retcode == 0:
+		break
+            time.sleep(1)
+
+
 
 # prologue gets 7 arguments:
 # 1 -- jobid
@@ -78,10 +99,10 @@ def main():
 	(host,mac) = get_host_mac()
 
 	#create the xml and boot the vm:
-	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))))
+	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))), host)
 
 	# write the job file:
-	write_jobfiles(hostname,ncpus)
+	write_jobfiles(host,ncpus)
 
 	#cleanup and exit:
 	finalize()
@@ -224,12 +245,20 @@ def create_xml(target,mac,ncpus,mem):
 	return xmldesc
 
 # Boot the vm
-def boot_vm(xmldesc):
+def boot_vm(xmldesc, hostname):
 	try:
 		lconn = libvirt.open(None)
 		dom = lconn.createLinux(xmldesc, 0)
 		if dom == None:
 			do_exit_error("Failed to boot VM")
+
+                # Wait for the VM to become online
+                pingWaiter = PingWaiter(hostname)
+		pingWaiter.start()
+                pingWaiter.join(5.0*60.0) # 5 minute timeout
+                if pingWaiter.isAlive():
+                    # If we get here, this means that a timeout occurred.
+                    do_exit_error("Failed to boot VM; ping timeout")
 	except:
 		do_exit_error("Failed to boot VM")	
     
