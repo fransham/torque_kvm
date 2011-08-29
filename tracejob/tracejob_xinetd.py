@@ -10,8 +10,7 @@ import commands
 def main():
 	tjinput = sys.stdin.readline().strip()
 	(ret, out) = commands.getstatusoutput('/usr/bin/tracejob '+tjinput)
-	if (ret != 0):
-		print out
+	print out
 
 if __name__ == "__main__":
 	main()

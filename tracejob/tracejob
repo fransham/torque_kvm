@@ -6,7 +6,7 @@ service tracejob
         wait                    = no
         user                    = root
         group                   = root
-        server                  = /opt/torque_ltda/bin/tracejob_xinetd.py
+        server                  = /opt/torque-ltda/bin/tracejob_xinetd.py
         port                    = 1234
         type                    = UNLISTED
 }
