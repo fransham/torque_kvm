@@ -211,7 +211,7 @@ def create_xml(target,mac,ncpus,mem,scratch):
       <target dev='hda'/>
     </disk>
     """
-    if scratch:
+	if scratch:
 		xmldesc += """
     <disk type='file'>
       <driver name='qemu' type='qcow2'/>
