@@ -6,6 +6,7 @@
 # will boot a virtual machine for a job.
 #
 ##############################################
+from future import division
 import sys
 import commands
 import os
@@ -75,7 +76,7 @@ def main():
 	ncpus = get_ncpus()
 
 	#create the xml and boot the vm:
-	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus)), get_scratch()))
+	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus)), get_scratch_disk()))
 
 	# write the job file:
 	write_jobfile(hostname)
@@ -97,6 +98,24 @@ def get_ncpus():
 def get_memory(num_cpus):
 	mempercore = config.getint("virt","mempercore")
 	return str( num_cpus * mempercore * 1048)	
+	
+def get_scratch_in_gb():
+	reqfile = parse_resources('file').lower()
+	if not reqfile:
+		return None
+	if re.match('.*tb', reqfile):
+		return int(reqfile[:-2])*1024
+	elif re.match('.*gb', reqfile):
+		return int(reqfile[:-2])
+	elif re.match('.*mb', reqfile):
+		return int(reqfile[:-2])/1024
+	elif re.match('.*kb', reqfile):
+		return int(reqfile[:-2])/1048576
+	elif re.match('.*b', reqfile):
+		return int(reqfile[:-2])/1073741824
+	return None
+		
+	
 
 def parse_resources(tofind):
 	if re.match('.*'+tofind+'=.*', requested_resources):
@@ -183,13 +202,35 @@ def get_host_mac():
 
 	return (host,mac)
 
-def get_scratch():
+# if we want scratch space for the VM, get it from this function
+def get_scratch_disk():
 	scratch = None
+	requested_scratch = get_scratch_in_gb()
+	if not requested_scratch:
+		try: 
+			requested_scratch = config.get('resources', 'default_scratch')
+		except ConfigParser.NoOptionError:
+			return None
 	try:
-		scratch = config.get('resources', 'shared_device')
+		scratch = config.get('resources', 'scratch')
 	except ConfigParser.NoOptionError:
-		pass
-	return scratch
+		return None
+		
+	#iterate over the entries in the conf file
+	scrach_disks = scratch.split(';')
+	for disk in scratch_disks:
+		sections = disk.strip().split(' ')
+		target = sections[1].strip()
+		#if the current entry has more scratch space than needed, break
+		if ( int(sections[0]) > requested_scratch ):
+			return target
+		
+	# if we get to this point, it's because no disk big enough was found
+	# I guess the behaviour should be to just select the biggest one?
+	# That seems reasonable, but we could make it fail at this point 
+	# instead.
+	return target
+	
 
 
 
@@ -213,8 +254,9 @@ def create_xml(target,mac,ncpus,mem,scratch):
     """
 	if scratch:
 		xmldesc += """
-    <disk type='file'>
-      <source file='"""+scratch+"""' bus='virtio'/>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='"""+scratch+"""'/>
       <target dev='hdb'/>
     </disk>
     """
@@ -291,5 +333,5 @@ def do_exit_error( message ):
 if __name__ == "__main__":
 	try:
 		main()
-	except  KeyboardInterrupt:
+	except:
 		do_exit_error("Prologue interrupted")
