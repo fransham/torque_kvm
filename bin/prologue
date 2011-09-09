@@ -6,7 +6,6 @@
 # will boot a virtual machine for a job.
 #
 ##############################################
-from future import division
 import sys
 import commands
 import os
@@ -67,7 +66,7 @@ def main():
 	check_image(imagepath)
 
 	#clone the backing image:
-	target = clone_image(imagepath)
+	target = clone_image(imagepath,vmrundir+'/'+uuid)
 
 	#get free hostname/mac:
 	(host,mac) = get_host_mac()
@@ -155,8 +154,7 @@ def check_image(imagefile):
 	output_message += '  imagefile:           '+imagefile+"\n"
 
 #clone the image:
-def clone_image(imagefile):
-	target=vmrundir+'/'+uuid
+def clone_image(imagefile, target):
 	(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
 	if (ret != 0):
 		 do_exit_error("Error creating image.  Error message follows: \n" + out) 
@@ -223,13 +221,10 @@ def get_scratch_disk():
 		target = sections[1].strip()
 		#if the current entry has more scratch space than needed, break
 		if ( int(sections[0]) > requested_scratch ):
-			return target
-		
-	# if we get to this point, it's because no disk big enough was found
-	# I guess the behaviour should be to just select the biggest one?
-	# That seems reasonable, but we could make it fail at this point 
-	# instead.
-	return target
+			break
+	
+	cloned_scratch = clone_image(target, vmrundir+'/'+uuid+'.scratch')
+	return cloned_scratch
 	
 
 
