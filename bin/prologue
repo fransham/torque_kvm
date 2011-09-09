@@ -221,7 +221,6 @@ def get_scratch_disk():
 		if not disk:
 			continue
 		sections = disk.strip().split(' ')
-		print sections
 		target = sections[1].strip()
 		#if the current entry has more scratch space than needed, break
 		if ( int(sections[0]) >= requested_scratch ):
