@@ -215,7 +215,7 @@ def get_scratch_disk():
 		return None
 		
 	#iterate over the entries in the conf file
-	scrach_disks = scratch.split(';')
+	scratch_disks = scratch.split(';')
 	for disk in scratch_disks:
 		sections = disk.strip().split(' ')
 		target = sections[1].strip()
