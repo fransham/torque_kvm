@@ -105,6 +105,12 @@ c.close()
 #delete the image file
 os.remove(vmrundir+'/'+uuid)
 
+#try to remove the scratch space, if it's there.
+try:
+	os.remove(vmrundir+'/'+uuid+'.scratch')
+except:
+	pass
+
 #delete the job file and script:
 os.remove(target_hostfile)
 
