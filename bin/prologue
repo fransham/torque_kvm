@@ -327,6 +327,6 @@ def do_exit_error( message ):
 
 if __name__ == "__main__":
 	try:
-		main()
-	except:
+	main()
+	except KeyboardInterrupt:
 		do_exit_error("Prologue interrupted")
