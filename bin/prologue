@@ -220,8 +220,6 @@ def get_scratch_disk():
 		#skip over this if it's a blank line:
 		if not disk:
 			continue
-		print requested_scratch
-		print disk
 		sections = disk.strip().split(' ')
 		print sections
 		target = sections[1].strip()
