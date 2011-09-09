@@ -226,7 +226,7 @@ def get_scratch_disk():
 		print sections
 		target = sections[1].strip()
 		#if the current entry has more scratch space than needed, break
-		if ( int(sections[0]) > requested_scratch ):
+		if ( int(sections[0]) >= requested_scratch ):
 			break
 	
 	cloned_scratch = clone_image(target, vmrundir+'/'+uuid+'.scratch')
