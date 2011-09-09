@@ -217,7 +217,9 @@ def get_scratch_disk():
 	#iterate over the entries in the conf file
 	scratch_disks = scratch.split(';')
 	for disk in scratch_disks:
+		print disk
 		sections = disk.strip().split(' ')
+		print sections
 		target = sections[1].strip()
 		#if the current entry has more scratch space than needed, break
 		if ( int(sections[0]) > requested_scratch ):
