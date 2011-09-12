@@ -35,8 +35,12 @@ class PingWaiter(Thread):
 
     def run(self):
         while True:
-            retcode = subprocess.call(['ping','-n','-c','1',self.host])
+            retcode = subprocess.call(['ping','-n','-c','1',self.host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            sys.stdout.write('.')
+            sys.stdout.flush()
             if retcode == 0:
+                sys.stdout.write(' OK \n')
+                sys.stdout.flush()
 		break
             time.sleep(1)
 
@@ -98,8 +102,13 @@ def main():
 	#get free hostname/mac:
 	(host,mac) = get_host_mac()
 
+        # get bridge to connect to
+        bridge = 'br0' # default to br0
+        if config.has_option("virt", "bridge"):
+            bridge = config.get("virt", "bridge")
+            
 	#create the xml and boot the vm:
-	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus))), host)
+	boot_vm(create_xml(target,mac,bridge,ncpus,get_memory(int(ncpus))), host)
 
 	# write the job file:
 	write_jobfiles(host,ncpus)
@@ -216,7 +225,7 @@ def get_host_mac():
 	return (host,mac)
 
 # create the libvirt xml for our domain
-def create_xml(target,mac,ncpus,mem):
+def create_xml(target,mac,bridge,ncpus,mem):
 	xmldesc="""<domain type='kvm'>
   <name>"""+uuid+"""</name>
   <memory>"""+mem+"""</memory>
@@ -234,7 +243,7 @@ def create_xml(target,mac,ncpus,mem):
     </disk>
     <interface type='bridge'>
       <mac address='"""+mac+"""'/>
-      <source bridge='br0'/>
+      <source bridge='"""+bridge+"""'/>
       <target dev='"""+uuid+"""-0'/>
       <model type='virtio'/>
     </interface>
@@ -253,6 +262,7 @@ def boot_vm(xmldesc, hostname):
 			do_exit_error("Failed to boot VM")
 
                 # Wait for the VM to become online
+                print 'Waiting for VM to become online... Please wait.'
                 pingWaiter = PingWaiter(hostname)
 		pingWaiter.start()
                 pingWaiter.join(5.0*60.0) # 5 minute timeout
