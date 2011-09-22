@@ -14,6 +14,7 @@ import libvirt
 import re
 import ConfigParser
 import shutil
+import socket
 
 try:
     import sqlite3
@@ -34,15 +35,26 @@ class PingWaiter(Thread):
         self.host = host
 
     def run(self):
+        # First let's wait for ping to be successfull
         while True:
             retcode = subprocess.call(['ping','-n','-c','1',self.host], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             sys.stdout.write('.')
             sys.stdout.flush()
             if retcode == 0:
-                sys.stdout.write(' OK \n')
-                sys.stdout.flush()
 		break
             time.sleep(1)
+
+        # Now lets wait for ssh (port 22) to become alive
+        while True:
+            sys.stdout.write('+')
+            sys.stdout.flush()
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect((self.host, 22))
+                s.close()
+                break
+            except Exception, e:
+                time.sleep(1)
 
 
 
