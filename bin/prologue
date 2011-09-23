@@ -123,7 +123,7 @@ def main():
 	boot_vm(create_xml(target,mac,bridge,ncpus,get_memory(int(ncpus))), host)
 
 	# write the job file:
-	write_jobfiles(host,ncpus)
+	write_jobfiles(host,ncpus,get_mpi_flavor(get_keyword()))
 
 	#cleanup and exit:
 	finalize()
@@ -162,17 +162,35 @@ def parse_resources(tofind):
 
 # get image path:
 def get_image_path(keyword):
-	request = config.get('resources','map')
-	rules = request.split(';')
-	for rule in rules:
-		sections = rule.strip().split(' ')
-		if ( ( sections[0] == queue or sections[0] == '%' ) and
-			 ( sections [1] == keyword or sections[1] == '%') and
-			 ( sections [2] == userid or sections[2] == '%') and
-			 ( sections [3] == groupid or sections[3] == '%') ):
-			return sections[4].strip()
-			
+    return get_session_parameter(keyword, 'img')
 
+def get_mpi_flavor(keyword):
+    return get_session_parameter(keyword, 'mpi_flavor')
+
+# returns a key->value dictionary of the session parameters
+# for a particular rule
+def get_session_parameters(keyword):
+    request = config.get('resources','map')
+    rules = request.split(';')
+    parameters = {}
+    for rule in rules:
+        sections = rule.strip().split(' ')
+        if ( ( sections[0] == queue or sections[0] == '%' ) and
+             ( sections[1] == keyword or sections[1] == '%') and
+             ( sections[2] == userid or sections[2] == '%') and
+             ( sections[3] == groupid or sections[3] == '%') ):
+            for keyvaluepair in sections[4:]:
+                parameters[keyvaluepair.split('=')[0].strip()] = keyvaluepair.split('=')[1].strip()
+            break
+    return parameters
+
+def get_session_parameter(keyword, name):
+    parameters = get_session_parameters(keyword)
+    if name in parameters:
+        return parameters[name]
+    else:
+        return None
+    
 #check the image path.  Exit if it's for a baremetal session:
 def check_image(imagefile):
 	global output_message
@@ -288,13 +306,21 @@ def boot_vm(xmldesc, hostname):
 # write the hostname of the booted vm to a file so that the
 # user's job can read it.  Create a second mpi-style hostfile
 # for mpi jobs
-def write_jobfiles(host,ncpus):
+def write_jobfiles(host,ncpus,mpi_flavor):
 	jobfile = open(target_hostfile,'w')
 	jobfile.write(host)
 	jobfile.close()
 	os.chmod(target_hostfile,644)
 	jobfile2 = open(shared_hostfile, 'a');
-	jobfile2.write(host+' slots='+ncpus+'\n')
+
+        if mpi_flavor is None or mpi_flavor == 'openmpi':
+            jobfile2.write(host+' slots='+ncpus+'\n')
+        elif mpi_flavor == 'mpich':
+            jobfile2.write('%s:%s\n' % (host, ncpus))
+        else:
+            print 'Error: Unrecognized MPI flavor %s\nUsing openmpi as fallback.' % (mpi_flavor)
+            jobfile2.write(host+' slots='+ncpus+'\n')
+            
 	jobfile2.close
 	os.chmod(shared_hostfile, 644)
 
