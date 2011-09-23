@@ -24,8 +24,6 @@ except:
 import subprocess
 from threading import Thread
 
-
-
 # This class is used to wait for a host to become online.
 # It will simply attempt to ping it every 1s, until ping
 # returns successfully (exit code 0).
@@ -85,6 +83,29 @@ lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
 shared_hostfile = config.get('virt','shared_hostfile_dir')+'/'+jobid
 hostname = None
+
+# Load amqp libraries if needed and read related settings from
+# config file.
+enable_monitoring = False
+if config.has_option("monitoring", "enable_monitoring"):
+    enable_monitoring = config.getboolean("monitoring", "enable_monitoring")
+amqp_host = None
+amqp_exchange = None
+if enable_monitoring:
+    try:
+        import pika
+        amqp_host = config.get("monitoring", "amqp_host")
+        amqp_exchange = config.get("monitoring", "amqp_exchange")
+        print 'Configured to report monitoring data to %s:%s' % (amqp_host, amqp_exchange)
+    except Exception, e:
+        print '%s' % (e)
+        print 'pika library not found; monitoring/accounting disabled'
+        enable_monitoring = False
+else:
+    print 'monitoring/accounting disabled'
+    
+
+
 output_message= '''
 ------------------------------------------------------------------
 TORQUE PROLOGUE:
