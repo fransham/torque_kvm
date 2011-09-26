@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python2.7
 
 ##############################################
 # 
@@ -15,6 +15,8 @@ import re
 import ConfigParser
 import shutil
 import socket
+import pprint
+import uuid
 
 try:
     import sqlite3
@@ -70,7 +72,10 @@ groupid=sys.argv[3]
 requested_resources=sys.argv[5]
 queue=sys.argv[6]
 bits=jobid.split('.')
-uuid='vm-'+bits[0]
+vmuuid='vm-'+bits[0]
+# The following uuid is guaranteed to be unique.  Used
+# for monitoring/accounting.
+vmuuid2=str(uuid.uuid4())
 
 #parameters and global variables
 config = ConfigParser.ConfigParser()
@@ -94,12 +99,13 @@ amqp_exchange = None
 if enable_monitoring:
     try:
         import pika
+        import json
         amqp_host = config.get("monitoring", "amqp_host")
         amqp_exchange = config.get("monitoring", "amqp_exchange")
         print 'Configured to report monitoring data to %s:%s' % (amqp_host, amqp_exchange)
     except Exception, e:
         print '%s' % (e)
-        print 'pika library not found; monitoring/accounting disabled'
+        print 'libraries required for ampq not found; monitoring/accounting disabled'
         enable_monitoring = False
 else:
     print 'monitoring/accounting disabled'
@@ -142,7 +148,8 @@ def main():
             
 	#create the xml and boot the vm:
 	boot_vm(create_xml(target,mac,bridge,ncpus,get_memory(int(ncpus))), host)
-
+        report_data('image_booted', [target,mac,bridge,ncpus,get_memory(int(ncpus)), host])
+        
 	# write the job file:
 	write_jobfiles(host,ncpus,get_mpi_flavor(get_keyword()))
 
@@ -229,7 +236,7 @@ def check_image(imagefile):
 
 #clone the image:
 def clone_image(imagefile):
-	target=vmrundir+'/'+uuid
+	target=vmrundir+'/'+vmuuid
 	(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
 	if (ret != 0):
 		 do_exit_error("Error creating image.  Error message follows: \n" + out) 
@@ -278,7 +285,7 @@ def get_host_mac():
 # create the libvirt xml for our domain
 def create_xml(target,mac,bridge,ncpus,mem):
 	xmldesc="""<domain type='kvm'>
-  <name>"""+uuid+"""</name>
+  <name>"""+vmuuid+"""</name>
   <memory>"""+mem+"""</memory>
   <vcpu>"""+ncpus+"""</vcpu>
   <os>
@@ -295,7 +302,7 @@ def create_xml(target,mac,bridge,ncpus,mem):
     <interface type='bridge'>
       <mac address='"""+mac+"""'/>
       <source bridge='"""+bridge+"""'/>
-      <target dev='"""+uuid+"""-0'/>
+      <target dev='"""+vmuuid+"""-0'/>
       <model type='virtio'/>
     </interface>
   </devices>
@@ -366,7 +373,7 @@ def do_exit():
 def do_exit_error( message ):
 	try:
 		lconn = libvirt.open(None)
-		dom = lconn.lookupByName(uuid)
+		dom = lconn.lookupByName(vmuuid)
 		dom.destroy()
 	except:
 		pass
@@ -379,6 +386,26 @@ def do_exit_error( message ):
 	release_db_lock()	
 	sys.stderr.write(message)
 	sys.exit(1)
+
+
+# Report back some data to the central amqp server.
+def report_data(key, value):
+    global vmuuid2
+    if not enable_monitoring:
+        return
+    
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_host))
+    channel = connection.channel()
+    channel.exchange_declare(exchange=amqp_exchange, type='fanout')
+    data = {}
+    data['uuid'] = vmuuid2
+    data['timestamp'] = time.time()
+    data['key'] = key
+    data['value'] = value
+    channel.basic_publish(exchange=amqp_exchange, routing_key='', body=json.dumps(data))
+    connection.close()
+    pprint.pprint(data)
+
 
 if __name__ == "__main__":
 	try:
