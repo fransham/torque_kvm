@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python2.7
 
 ###########################################
 #
@@ -14,6 +14,7 @@ import os
 import sys
 import re
 import ConfigParser
+from torque_kvm_mon import DataReporter
 
 try:
     import sqlite3
@@ -26,7 +27,7 @@ config.read('/etc/torque-kvm.conf')
 torque_home=config.get("torque","torque_home")
 dbfile=torque_home + "/net/network.db"
 vmrundir = config.get("virt", "vmrundir")
-
+data_reporter = DataReporter(config)
 
 # epilogue gets 9 arguments:
 # 1 -- jobid
@@ -65,11 +66,12 @@ TORQUE EPILOGUE:
 
 
 bits=jobid.split('.')
-uuid='vm-'+bits[0]
+vmuuid='vm-'+bits[0]
 target_hostfile=torque_home+"/virt/"+jobid
 
 
 #destroy the vm
+data_reporter.report_data(vmuuid, 'shutdown_process_start', None)
 conn = libvirt.open(None)
 if conn == None:
     print 'Failed to open connection to the hypervisor'    
@@ -77,7 +79,7 @@ if conn == None:
 
 
 try:
-    dom = conn.lookupByName(uuid)
+    dom = conn.lookupByName(vmuuid)
 except:
 	# no vm for a baremetal session
 	print '''------------------------------------------------------------------'''
@@ -90,7 +92,7 @@ if dom.shutdown() != 0:
 del dom
 del conn
 
-print "  domain " + uuid + " destroyed"
+print "  domain " + vmuuid + " destroyed"
 
 #get the entry from the host file
 host = open(target_hostfile,'r').read()
@@ -103,11 +105,12 @@ conn.commit()
 c.close()
 
 #delete the image file
-os.remove(vmrundir+'/'+uuid)
+os.remove(vmrundir+'/'+vmuuid)
 
 #delete the job file and script:
 os.remove(target_hostfile)
 
 print '''------------------------------------------------------------------
 '''
+data_reporter.report_data(vmuuid, 'shutdown_process_end', None)
 #all done!
