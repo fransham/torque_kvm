@@ -13,10 +13,11 @@ def process_stats(ch, method, properties, body):
     try:
         global db
         data = json.loads(body)
-        logging.info('Received:\n%s' % (data))
+        key = data['key']
+
+        logging.debug('Received %s data for %s' % (key, data['instance_uuid']))
         c = db.cursor()
         
-        key = data['key']
 	if key == 'boot_process_start':
             c.execute("""INSERT INTO data SET
             instance_uuid = %s,
@@ -38,17 +39,33 @@ def process_stats(ch, method, properties, body):
                        data['data'][6],
                        data['timestamp'])
                       )
-            logging.info('boot_process_start record written to db')
+            logging.debug('boot_process_start record written to db')
             
         elif key == 'boot_process_end':
             c.execute("""UPDATE data SET boot_process_end = FROM_UNIXTIME(%s) WHERE instance_uuid = %s;""",
                       (data['timestamp'],
                        data['instance_uuid'])
                       )
-            logging.info('boot_process_end record written to db')
+            logging.debug('boot_process_end record written to db')
+            
+        elif key == 'shutdown_process_start':
+            c.execute("""UPDATE data SET shutdown_process_start = FROM_UNIXTIME(%s) WHERE instance_uuid = %s;""",
+                      (data['timestamp'],
+                       data['instance_uuid'])
+                      )
+            logging.debug('shutdown_process_start record written to db')
+            
+        elif key == 'shutdown_process_end':
+            c.execute("""UPDATE data SET shutdown_process_end = FROM_UNIXTIME(%s) WHERE instance_uuid = %s;""",
+                      (data['timestamp'],
+                       data['instance_uuid'])
+                      )
+            logging.debug('shutdown_process_end record written to db')
             
         else:
-            pass
+            logging.warning('Received data with unrecognized key: %s' % (key))
+
+        c.close()
         
     except Exception, e:
         logging.error('Error processing incoming data.\n%s' % (e))
