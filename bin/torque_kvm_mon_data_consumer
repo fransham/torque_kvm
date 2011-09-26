@@ -1,0 +1,95 @@
+#!/usr/local/bin/python2.7
+import sys
+import time
+import MySQLdb
+import pika
+import json
+import ConfigParser
+import logging
+import pprint
+
+
+def process_stats(ch, method, properties, body):
+    try:
+        global db
+        data = json.loads(body)
+        logging.info('Received:\n%s' % (data))
+        c = db.cursor()
+        
+        key = data['key']
+	if key == 'boot_process_start':
+            c.execute("""INSERT INTO data SET
+            instance_uuid = %s,
+            vm_image = %s,
+            mac = %s,
+            nic = %s,
+            ncpus = %s,
+            memory = %s,
+            hostname = %s,
+            user = %s,
+            boot_process_start = FROM_UNIXTIME(%s);""",
+                      (data['instance_uuid'],
+                       data['data'][0],
+                       data['data'][1],
+                       data['data'][2],
+                       data['data'][3],
+                       data['data'][4],
+                       data['data'][5],
+                       data['data'][6],
+                       data['timestamp'])
+                      )
+            logging.info('boot_process_start record written to db')
+            
+        elif key == 'boot_process_end':
+            c.execute("""UPDATE data SET boot_process_end = FROM_UNIXTIME(%s) WHERE instance_uuid = %s;""",
+                      (data['timestamp'],
+                       data['instance_uuid'])
+                      )
+            logging.info('boot_process_end record written to db')
+            
+        else:
+            pass
+        
+    except Exception, e:
+        logging.error('Error processing incoming data.\n%s' % (e))
+                
+
+
+if __name__ == "__main__":
+    logging.basicConfig(filename='/var/log/torque_kvm_mon_data_consumer.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
+    config = ConfigParser.ConfigParser()
+    try:
+        config.readfp(open('/etc/torque_kvm_mon_data_consumer.conf'))
+    except Exception, e:
+        logging.critical('Error reading configuration file.\n%s' % (e))
+        sys.exit(1)
+
+    db_host = config.get('defaults', 'db_host')
+    db_user = config.get('defaults', 'db_user')
+    db_password = config.get('defaults', 'db_password')
+    db_name = config.get('defaults', 'db_name')
+    amqp_host = config.get('defaults', 'amqp_host')
+    amqp_exchange = config.get('defaults', 'amqp_exchange')
+
+    db = MySQLdb.connect(user=db_user, passwd=db_password, db=db_name)
+    logging.info('Connected to database %s on %s as %s' % (db_name, db_host, db_user))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_host))
+    
+    channel = connection.channel()
+    channel.exchange_declare(exchange=amqp_exchange, type='fanout')	
+    result = channel.queue_declare(exclusive=True)
+    queue_name = result.method.queue
+    channel.queue_bind(exchange=amqp_exchange, queue=queue_name)
+    channel.basic_consume(process_stats, queue=queue_name, no_ack=True)
+
+    logging.info('Listening for incoming stats...')
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt, e:
+        logging.info('Exiting because of keyboard interrupt.')
+
+    connection.close()
+    logging.info('Connection to amqp host closed.')
+    db.close()
+    logging.info('Connection to database closed.')
+    

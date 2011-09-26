@@ -51,3 +51,25 @@ On all submit nodes, copy bin/submit_filter to any directory you want.  The file
 SUBMITFILTER /path/to/submit/filter
 
 
+
+Monitoring/accounting setup instructions:
+
+Create a database called cloudmon, with the following table:
+
+CREATE TABLE `data` (
+  `instance_uuid` varchar(128) NOT NULL,
+  `vm_image` tinytext,
+  `mac` char(17) default NULL,
+  `nic` tinytext,
+  `ncpus` smallint(6) default NULL,
+  `memory` int(11) default NULL,
+  `hostname` tinytext,
+  `user` tinytext,
+  `boot_process_start` datetime default NULL,
+  `boot_process_end` datetime default NULL,
+  `shutdown_process_start` datetime default NULL,
+  `shutdown_process_end` datetime default NULL,
+  PRIMARY KEY  (`instance_uuid`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1
+
+

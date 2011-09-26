@@ -16,7 +16,6 @@ import ConfigParser
 import shutil
 import socket
 import pprint
-import uuid
 
 try:
     import sqlite3
@@ -73,9 +72,6 @@ requested_resources=sys.argv[5]
 queue=sys.argv[6]
 bits=jobid.split('.')
 vmuuid='vm-'+bits[0]
-# The following uuid is guaranteed to be unique.  Used
-# for monitoring/accounting.
-vmuuid2=str(uuid.uuid4())
 
 #parameters and global variables
 config = ConfigParser.ConfigParser()
@@ -147,8 +143,9 @@ def main():
             bridge = config.get("virt", "bridge")
             
 	#create the xml and boot the vm:
+        report_data('boot_process_start', [target,mac,bridge,ncpus,get_memory(int(ncpus)), host, userid])
 	boot_vm(create_xml(target,mac,bridge,ncpus,get_memory(int(ncpus))), host)
-        report_data('image_booted', [target,mac,bridge,ncpus,get_memory(int(ncpus)), host])
+        report_data('boot_process_end', None)
         
 	# write the job file:
 	write_jobfiles(host,ncpus,get_mpi_flavor(get_keyword()))
@@ -390,7 +387,7 @@ def do_exit_error( message ):
 
 # Report back some data to the central amqp server.
 def report_data(key, value):
-    global vmuuid2
+    global vmuuid
     if not enable_monitoring:
         return
     
@@ -398,10 +395,10 @@ def report_data(key, value):
     channel = connection.channel()
     channel.exchange_declare(exchange=amqp_exchange, type='fanout')
     data = {}
-    data['uuid'] = vmuuid2
+    data['instance_uuid'] = vmuuid
     data['timestamp'] = time.time()
     data['key'] = key
-    data['value'] = value
+    data['data'] = value
     channel.basic_publish(exchange=amqp_exchange, routing_key='', body=json.dumps(data))
     connection.close()
     pprint.pprint(data)
