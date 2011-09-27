@@ -16,6 +16,7 @@ class TorqueKvmMonDataConsumer():
     db_name = None
     amqp_host = None
     amqp_exchange = None
+    amqp_work_queue = None
 
     def __init__(self):
         logging.basicConfig(filename='/var/log/torque_kvm_mon_data_consumer.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
@@ -33,19 +34,20 @@ class TorqueKvmMonDataConsumer():
         self.db_name = config.get('defaults', 'db_name')
         self.amqp_host = config.get('defaults', 'amqp_host')
         self.amqp_exchange = config.get('defaults', 'amqp_exchange')
+        self.amqp_work_queue = config.get('defaults', 'amqp_work_queue')
 
 
     def consume_data(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.amqp_host))
 
         channel = connection.channel()
-        channel.exchange_declare(exchange=self.amqp_exchange, type='fanout')
-        result = channel.queue_declare(exclusive=True)
-        queue_name = result.method.queue
-        channel.queue_bind(exchange=self.amqp_exchange, queue=queue_name)
-        channel.basic_consume(self.process_stats, queue=queue_name, no_ack=True)
+        
+        #channel.exchange_declare(exchange=self.amqp_exchange, type='fanout')
+        channel.queue_declare(queue=self.amqp_work_queue, durable=True)
+        #channel.queue_bind(exchange=self.amqp_exchange, queue=queue_name)
+        channel.basic_consume(self.process_stats, queue=self.amqp_work_queue)
 
-        logging.info('Listening for incoming stats...')
+        logging.info('Listening for incoming stats on work queue...')
         try:
             channel.start_consuming()
         except KeyboardInterrupt, e:
@@ -125,6 +127,7 @@ class TorqueKvmMonDataConsumer():
             c.close()
             db.close()
             logging.info('Connection to database closed.')
+            ch.basic_ack(delivery_tag = method.delivery_tag)
 
         except Exception, e:
             logging.error('Error processing incoming data.\n%s' % (e))
