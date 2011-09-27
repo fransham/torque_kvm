@@ -42,9 +42,7 @@ class TorqueKvmMonDataConsumer():
 
         channel = connection.channel()
         
-        #channel.exchange_declare(exchange=self.amqp_exchange, type='fanout')
         channel.queue_declare(queue=self.amqp_work_queue, durable=True)
-        #channel.queue_bind(exchange=self.amqp_exchange, queue=queue_name)
         channel.basic_consume(self.process_stats, queue=self.amqp_work_queue)
 
         logging.info('Listening for incoming stats on work queue...')
