@@ -10,86 +10,170 @@
 #
 #################################################################
 
+import re
 import sys
+from optparse import OptionParser
 
+#where did you install torque?
 torque_home="/var/spool/torque"
-target_host=torque_home+'/virt/${PBS_JOBID}'
 
 #customize any system defaults you want in here.
 #memory should be small, since all it's doing is running ssh
 system_defaults='''
-#PBS -l mem=16MB
-#PBS -l walltime=48:00:00 
-#PBS -l nodes=1 
-#PBS -l ncpus=1
+#PBS -l mem=32mb
+#PBS -S /bin/bash
 '''
 
-#get the user's job script from STDIN
-data = sys.stdin.readlines()
+#global variables
+target_host=torque_home+'/virt/${PBS_JOBID}'
+target_dir='${PBS_O_HOME}/.torque-ltda/'
+target_script=target_dir+'${PBS_JOBID}.job'
+pbs_directives=[]
 
-#print shebang if it's there:
-first= data[0]
-shell_is_csh = False
-if first.startswith('#!'):
-	print first
-	if (first.startswith('#!/bin/tcsh') or first.startswith('#!/bin/csh')):
-		shell_is_csh = True
+    
+# put your filters into this array to have them applied to the data
+# write any new filters you want and add them to this list.
+filters=[
+		lambda x: csh_shell_filter(x),
+		lambda x: pbs_directive_filter(x)
+         ]
 
-#next add system defaults
-print system_defaults
+# The main function.  It all starts here!
+def main():
+    # filter the command line arguments first:
+    (options,args) = cmd_line_arg_filter()
+    
+    #get the user's job script from STDIN
+    data = sys.stdin.readlines()
+    
+    #apply the filters to the #PBS directives
+    userjob = apply_filters(data)
+    
+    #write the directives to the job file
+    write_pbs_directives()
+    
+    #set the job targets
+    write_targets()
+    
+    #write the user's job to a file:
+    write_job(userjob)
 
-#the actual job will be contained in userjob.
-userjob = []
-for line in data:
-	#any PBS directives we want to go to STDOUT
-	if line.startswith('#PBS'):
-		print line,
-	#otherwise save it for later
-	else:
-		userjob.append(line)
+    
+#apply the filters.
+def apply_filters(data):
+	filtered_data=[]
+	for line in data:
+		output = line.rstrip()
+		for filter in filters:
+			output = filter(output)
+		filtered_data.append(output)
+	return filtered_data
 
-#torque environment variables to send to the job
-envvars_to_job=("PBS_O_HOST","PBS_O_LOGNAME",
-	"PBS_O_HOME","PBS_O_WORKDIR","PBS_ENVIRONMENT",
-	"PBS_O_QUEUE","PBS_JOBID", "PBS_JOBNAME",
-	"PBS_NODEFILE")
 
-#set the job's target host, script file, and envvars:
-target_script=target_host+'.job'
-if shell_is_csh:
-	print 'setenv TARGET_HOST `cat '+target_host+'`'
-	print 'setenv TARGET_SCRIPT '+target_script	
-	for var in envvars_to_job:
-		print 'echo setenv '+var+' $'+var+' >> $TARGET_SCRIPT'
-else:
+#filter the command line arguments first.  Check for
+#environment variables to pass to the job and memory request.   
+#Memory requests from 
+#the command line cannot be overwritten, so the job is
+#rejected.  Memory specifications in the submit script is fine.
+#Reject -S flag.
+#if we want a baremetal session, just quit without doing anything.
+def cmd_line_arg_filter():
+	#all qsub options have to be defined:
+	parser = OptionParser(add_help_option=False)
+	parser.add_option("-a", dest="date_time")
+	parser.add_option("-A", dest="account_string")
+	parser.add_option("-b", dest="seconds")
+	parser.add_option("-c", dest="checkpoint_opts")
+	parser.add_option("-C", dest="directive_prefix")
+	parser.add_option("-d", dest="path")
+	parser.add_option("-D", dest="rootpath")
+	parser.add_option("-e", dest="error_path")
+	parser.add_option("-f", action="store_true", dest="fault_tolerant")
+	parser.add_option("-h", action="store_true", dest="hold")
+	parser.add_option("-I", action="store_true", dest="interactive")
+	parser.add_option("-j", dest="join")
+	parser.add_option("-k", dest="keep")
+	parser.add_option("-l", type="string", action="callback", callback=check_resources)
+	parser.add_option("-m", dest="mail")
+	parser.add_option("-N", dest="name")
+	parser.add_option("-o", dest="outpath")
+	parser.add_option("-p", dest="priority")
+	parser.add_option("-P", dest="user_group")
+	parser.add_option("-q", dest="dest_queue")
+	parser.add_option("-r", dest="rerunnable")
+	parser.add_option("-S", type="string", action="callback", callback=check_shell)
+	parser.add_option("-t", dest="array_request")
+	parser.add_option("-u", dest="userlist")
+	parser.add_option("-v", dest='userenvs')
+	parser.add_option("-V", action="store_true", dest="export_all")
+	parser.add_option("-W", dest="additional")
+	parser.add_option("-X", dest="enable_X11")
+	parser.add_option("-z", dest="quiet")
+
+	return parser.parse_args()
+
+def check_resources(option, opt_str, value, parser):
+	if re.match('.*mem\=.*', value):
+		sys.stderr.write('\n Sorry, memory cannot be specified on the commmand line.' )
+		sys.stderr.write(' Please add it to your submit file and retry.\n\n')
+		sys.exit(-1)
+
+def check_shell(option, opt_str, value, parser):
+	sys.stderr.write('\n Sorry, a different shell cannot be specified. ' )
+	sys.stderr.write(' Please change your default shell with ypchsh and retry.\n\n')
+	sys.exit(-1)
+
+    
+#strip out all #PBS directives:
+def pbs_directive_filter(tocheck):
+	if re.match('\#PBS',tocheck):
+		global pbs_directives
+		pbs_directives.extend([tocheck.rstrip()])
+	return tocheck
+    
+#check if the user wants a csh or tcsh
+def csh_shell_filter(tocheck):
+	if re.match('\#PBS\s+\-S',tocheck):
+		sys.stderr.write('\n Sorry, a different shell cannot be specified. ' )
+		sys.stderr.write(' Please change your default shell with ypchsh and retry.\n\n')
+		sys.exit(-1)
+	return tocheck
+        
+def write_pbs_directives():
+    print system_defaults
+    for directive in pbs_directives:
+        print directive
+
+def write_targets():
+	print 'mkdir -p '+target_dir
 	print 'export TARGET_HOST=`cat '+target_host+'`'
-	print 'export TARGET_SCRIPT='+target_script	
-	for var in envvars_to_job:
-		print 'echo export '+var+'\=$'+var+' >> $TARGET_SCRIPT'
-	
-#switch to the correct initial directory
-print 'echo cd $PBS_O_WORKDIR >> $TARGET_SCRIPT'
-
-#write the user's script to the job file
-for line in userjob:
-	print 'echo \''+line.replace('\'','\'\\\'\'').rstrip()+'\' >> $TARGET_SCRIPT'
-
-#stall to make sure the VM has come online.  If it's not online after
-#5 mins, it's probably not coming up, and the other commands will fail too.
-#The user will see connection timed out, or no route to host in the
-#job log
-print 'ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"'
-
-#the vm is online now.  Copy the job file.
-print 'scp ${TARGET_SCRIPT} ${TARGET_HOST}:/tmp/${PBS_JOBID}'
-
-#make the job file execuable
-print 'ssh ${TARGET_HOST} "chmod 755 /tmp/${PBS_JOBID}"'
-
-#run the job!
-print 'ssh ${TARGET_HOST} "/tmp/${PBS_JOBID}"'
-
-#cleanup the job log
-print 'rm $TARGET_SCRIPT'
+	print 'export TARGET_SCRIPT='+target_script
+	print 'for userenv in `env | grep -v -E \'^HOSTNAME=|^ENVIRONMENT=|^HOST=|^WORKDIR=|^PWD=|^_=|^TMPDIR=|^TMP=|^SSH_|^DISPLAY=\'`;do export ALLENVS=${ALLENVS}\' -V \'$userenv; done'
 
 
+#write the actual user's job 
+def write_job(userjob):
+
+    #write the user's script to the job file
+	for line in userjob:
+		print 'echo \''+line.replace('\'','\'\\\'\'').rstrip()+'\' >> $TARGET_SCRIPT'
+
+	print 'chmod 755 $TARGET_SCRIPT'
+
+	#check if there's a hostname in the job file.  
+	print 'if [ -n "$TARGET_HOST" ]; then'
+	#we're in a VM session.
+    #stall to make sure the VM has come online.  If it's not online after
+    #5 mins, it's probably not coming up.
+    #When it's alive, run the job in the proper environement.  
+	print 'sshenv -Q ${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
+	print 'else'
+	#we're on baremetal.  Execute the job script in the user's shell.
+	print '${SHELL} ${TARGET_SCRIPT}'
+	print 'fi'
+
+    #cleanup the job script
+	print 'rm $TARGET_SCRIPT'
+    
+if __name__ == "__main__":
+    main()

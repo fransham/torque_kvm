@@ -10,129 +10,337 @@ import sys
 import commands
 import os
 import time
-import libvirt
+#import libvirt
+import subprocess
+import re
+import ConfigParser
+
 try:
     import sqlite3
 except:
     from pysqlite2 import dbapi2 as sqlite3
 
 
-# prologue gets 3 arguments:
+# prologue gets 7 arguments:
 # 1 -- jobid
 # 2 -- userid
 # 3 -- grpid
+# 4 -- job name
+# 5 -- list of requested resources
+# 6 -- queue
+# 7 -- job account
 jobid=sys.argv[1]
 userid=sys.argv[2]
+groupid=sys.argv[3]
+requested_resources=sys.argv[5]
+queue=sys.argv[6]
 bits=jobid.split('.')
 uuid='vm-'+bits[0]
 
-# some parameters, hardcoded for now:
-torque_home="/var/spool/torque"
-imagefile = "/opt/torque-ltda/images/bbr-ltda.qcow2"
-vmrundir = "/scratch/secureimages"
+#parameters and global variables
+config = ConfigParser.ConfigParser()
+config.read('/etc/torque-kvm.conf')
+torque_home=config.get("torque","torque_home")
+vmrundir = config.get("virt", "vmrundir")
 dbfile=torque_home + "/net/network.db"
+conn=sqlite3.connect(dbfile)
 lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
+mempercore=2
+hostname = None
+output_message= '''
+------------------------------------------------------------------
+TORQUE PROLOGUE:
+  jobid:               '''+jobid+'''
+  userid:              '''+userid+'''
+  requested resources: '''+requested_resources+'''
+  queue:               '''+queue+'''
+'''
 
+
+
+def main():
+
+	#get imagepath from keyword and resource info:
+	imagepath = get_image_path(get_keyword())
+
+	#check if the imagepath is for a baremetal session:
+	check_image(imagepath)
+
+	#clone the backing image:
+	target = clone_image(imagepath,vmrundir+'/'+uuid)
+
+	#get free hostname/mac:
+	(host,mac) = get_host_mac()
+
+	#get the number of cpus requested:
+	ncpus = get_ncpus()
+
+	#create the xml and boot the vm:
+#	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus)), get_scratch_disk()))
+	boot_vm(uuid,get_memory(int(ncpus)),ncpus,mac,target,get_scratch_disk())
+	# write the job file:
+	write_jobfile(hostname)
+
+	#cleanup and exit:
+	finalize()
+	
+
+# get keyword:
+def get_keyword():
+	return parse_resources('other')
+
+def get_ncpus():
+	ncpus = parse_resources('ncpus')
+	if ncpus:
+		return ncpus
+	return '1'
+
+def get_memory(num_cpus):
+#	mempercore = config.getint("virt","mempercore")
+	return str( num_cpus * mempercore * 1048)	
+	
+def get_scratch_in_gb():
+	reqfile = parse_resources('file').lower()
+	if not reqfile:
+		return None
+	if re.match('.*tb', reqfile):
+		return int(reqfile[:-2])*1024
+	elif re.match('.*gb', reqfile):
+		return int(reqfile[:-2])
+	elif re.match('.*mb', reqfile):
+		return int(reqfile[:-2])/1024
+	elif re.match('.*kb', reqfile):
+		return int(reqfile[:-2])/1048576
+	elif re.match('.*b', reqfile):
+		return int(reqfile[:-2])/1073741824
+	return None
+		
+	
+
+def parse_resources(tofind):
+	if re.match('.*'+tofind+'=.*', requested_resources):
+		request = re.split(',',requested_resources.rstrip())
+		for resource in request:
+			if resource.startswith(tofind+'='):
+				match = re.split('=',resource)[1]
+				return match
+	return ""
+
+# get image path:
+def get_image_path(keyword):
+	request = config.get('resources','map')
+	rules = request.split(';')
+	for rule in rules:
+		sections = rule.strip().split(' ')
+		if ( ( sections[0] == queue or sections[0] == '%' ) and
+			 ( sections [1] == keyword or sections[1] == '%') and
+			 ( sections [2] == userid or sections[2] == '%') and
+			 ( sections [3] == groupid or sections[3] == '%') ):
+			return sections[4].strip()
+			
+
+#check the image path.  Exit if it's for a baremetal session:
+def check_image(imagefile):
+	global output_message
+	if imagefile == None or imagefile == "None":
+		output_message += '''  session type:        baremetal
+------------------------------------------------------------------'''	
+		open(target_hostfile, 'w').close() 
+		os.chmod(target_hostfile, 644)
+		do_exit()
+
+	if not os.path.exists(imagefile):
+		do_exit_error( ' Cannot file image file: '+imagefile )
+
+	output_message += '  imagefile:           '+imagefile+"\n"
 
 #clone the image:
-target=vmrundir+'/'+uuid
-(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
-if (ret != 0):
-	print "Error creating image.  Error message follows:" 
-	print out
-	sys.exit(1)
+def clone_image(imagefile, target):
+	(ret, out) = commands.getstatusoutput('qemu-img create -b '+imagefile+' -f qcow2 '+target)
+	if (ret != 0):
+		 do_exit_error("Error creating image.  Error message follows: \n" + out) 
+	return target
 
 #get a lock on the database
-count=0
-while(count < 60):
+def lock_db():
+	count=0
+	while(count < 60):
+		try:
+			os.mkdir(lockfile)
+			break
+		except OSError:
+			time.sleep(1)
+			count+=1
+
+	if (count >= 60):
+		do_exit_error( "could not acquire lock on db... exiting." )
+
+#get a hostname and mac from the database
+def get_host_mac():
+	lock_db()
+	global conn
+	c=conn.cursor()
+	c.execute('select * from reservations where inuse = 0')
+
 	try:
-		os.mkdir(lockfile)
-		break
-	except OSError:
-		time.sleep(1)
-		count+=1
+		(host,ip,mac,inuse) = c.next()
+	except StopIteration:
+		do_exit_error( "no free network slots!" )
 
-if (count >= 60):
-	print "could not acquire lock on db... exiting."
-	sys.exit(1)
+	# update the db
+	c.execute("update reservations set inuse = 1 where hostname=?",[host])
+	conn.commit()
+	c.close()
 
-#now we have an exclusive lock on the database, get an unused mac address:
-conn=sqlite3.connect(dbfile)
-c=conn.cursor()
-c.execute('select * from reservations where inuse = 0')
+	#release the lock
+	release_db_lock()
 
-try:
-        (host,ip,mac,inuse) = c.next()
-except StopIteration:
-        print "no free network slots!"
-        sys.exit(1)
+	#set the global var
+	global hostname
+	hostname = host
 
-# update the db
-c.execute("update reservations set inuse = 1 where hostname=?",[host])
-conn.commit()
+	return (host,mac)
 
-#release the lock
-os.rmdir(lockfile)
-c.close()
+# if we want scratch space for the VM, get it from this function
+def get_scratch_disk():
+	scratch = None
+	requested_scratch = get_scratch_in_gb()
+	if not requested_scratch:
+		try: 
+			requested_scratch = int(config.get('resources', 'default_scratch').strip())
+		except ConfigParser.NoOptionError:
+			return None
+	try:
+		scratch = config.get('resources', 'scratch')
+	except ConfigParser.NoOptionError:
+		return None
+		
+	#iterate over the entries in the conf file
+	scratch_disks = scratch.split(';')
+	for disk in scratch_disks:
+		#skip over this if it's a blank line:
+		if not disk:
+			continue
+		sections = disk.strip().split(' ')
+		target = sections[1].strip()
+		#if the current entry has more scratch space than needed, break
+		if ( int(sections[0]) >= requested_scratch ):
+			break
+	
+	cloned_scratch = clone_image(target, vmrundir+'/'+uuid+'.scratch')
+	return cloned_scratch
+	
+
+
 
 # create the libvirt xml for our domain
-xmldesc="""<domain type='kvm'>
+def create_xml(target,mac,ncpus,mem,scratch):
+	xmldesc="""<domain type='kvm'>
   <name>"""+uuid+"""</name>
-  <memory>2097152</memory>
-  <currentMemory>2097152</currentMemory>
-  <vcpu>1</vcpu>
+  <memory>"""+mem+"""</memory>
+  <vcpu>"""+ncpus+"""</vcpu>
   <os>
-    <type arch='x86_64' machine='rhel5.4.0'>hvm</type>
+    <type arch='i686'>hvm</type>
     <boot dev='hd'/>
   </os>
-  <clock offset='utc'>
-    <timer name='pit' tickpolicy='delay'/>
-  </clock>
-  <on_poweroff>destroy</on_poweroff>
-  <on_reboot>restart</on_reboot>
-  <on_crash>destroy</on_crash>
   <devices>
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <source file='"""+target+"""'/>
-      <target dev='hda' bus='ide'/>
-      <address type='drive' controller='0' bus='0' unit='0'/>
+      <target dev='hda'/>
     </disk>
-    <controller type='ide' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
-    </controller>
-    <interface type='bridge'>
+    """
+	if scratch:
+		xmldesc += """
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='"""+scratch+"""'/>
+      <target dev='hdb'/>
+    </disk>
+    """
+	xmldesc += """<interface type='bridge'>
       <mac address='"""+mac+"""'/>
       <source bridge='br0'/>
       <target dev='"""+uuid+"""-0'/>
       <model type='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </interface>
   </devices>
+  <cpu match='minimum'>
+	<model>qemu32</model>
+  </cpu>
+
 </domain>
+
 """
+	return xmldesc
 
 # Boot the vm
-lconn = libvirt.open(None)
-if lconn == None:
-    print 'Failed to open connection to the hypervisor'
-    sys.exit(1)
-dom = lconn.createLinux(xmldesc, 0)
-if dom == None:
-    print 'Virtual machine creation failed'
-    sys.exit(1)
+def boot_vm(uuid,mem,ncpus,mac,target,scratch):
+#	try:
+		os.system('/usr/sbin/tunctl -t '+uuid+'>/dev/null')
+		os.system('/usr/sbin/brctl addif br0 '+uuid)
+		os.system('/sbin/ifconfig '+uuid+' up')
+  	 	optionstring='-name '+uuid+' -m '+mem+' -smp '+ncpus+' -cpu qemu64 -net nic,macaddr='+mac+',vlan=0,model=virtio -net tap,ifname='+uuid+',vlan=0,script=no,downscript=no  -boot c -drive file='+target+',if=ide,bus=0,unit=0,boot=on,format=qcow2 -drive file='+scratch+',if=ide,bus=0,unit=1,format=qcow2 -balloon virtio -nographic -no-acpi -clock unix'
+		os.system('/usr/libexec/qemu-kvm '+optionstring+'&')
 
-print "Domain: id %d starting %s" % (dom.ID(), dom.OSType())
+#		lconn = libvirt.open(None)
+#		dom = lconn.createLinux(xmldesc, 0)
+#		if (ret!=0):
+#			do_exit_error("Failed to boot VM")
+#	except:
+#		do_exit_error("Failed to boot VM")	
+
+
+    
 
 # write the hostname of the booted vm to a file so that the
 # user's job can read it:
-print "host: " + host
-jobfile = open(target_hostfile,'w')
-jobfile.write(host)
-jobfile.close()
-os.chmod(target_hostfile,644)
+def write_jobfile(host):
+	jobfile = open(target_hostfile,'w')
+	jobfile.write(host)
+	jobfile.close()
+	os.chmod(target_hostfile,644)
 
-#vm created! 
-sys.exit(0)
+def finalize():
+	global output_message
+	output_message+= "  host:                " + hostname + '''
+------------------------------------------------------------------
+
+'''
+	do_exit()
+
+def release_db_lock():
+	try:		
+		os.rmdir(lockfile)	
+	except:
+		pass
+
+def do_exit():
+	print output_message
+	sys.exit(0)
+
+def do_exit_error( message ):
+	try:
+		pass
+#		lconn = libvirt.open(None)
+#		dom = lconn.lookupByName(uuid)
+#		dom.destroy()
+	except:
+		pass
+	if hostname:
+		global conn
+		c=conn.cursor()
+		c.execute("update reservations set inuse = 0 where hostname=?",[hostname])
+		conn.commit()
+		c.close()
+	release_db_lock()	
+	sys.stderr.write(message)
+	sys.exit(1)
+
+if __name__ == "__main__":
+	try:
+		main()
+	except KeyboardInterrupt:
+		do_exit_error("Prologue interrupted")

@@ -15,23 +15,29 @@
 # this script,  as it could cause them to fail.
 ################################################# 
 
+import os
+import ConfigParser
+try:
+    import sqlite3
+except:
+    from pysqlite2 import dbapi2 as sqlite3
+
+config = ConfigParser.ConfigParser()
+config.read('/etc/torque-kvm.conf')
+
 #some parameters for your network:
-subnetmask="255.255.252.0"
-gateway="172.23.128.1"
-broadcast="172.23.255.255"
-dnsserver="172.23.136.8"
-# some parameters, hardcoded for now:
-torque_home="/var/spool/torque"
+subnetmask=config.get("net","subnetmask")
+gateway=config.get("net","gateway")
+broadcast=config.get("net","broadcast")
+dnsserver=config.get("net","dnsserver")
+
+# other parameters
+torque_home=config.get("torque","torque_home")
 dbfile=torque_home + "/net/network.db"
 netfile=torque_home + "/net/network.conf"
 dhcpfile=torque_home + "/net/dhcpd.entries"
 
 
-import os
-try:
-    import sqlite3
-except:
-    from pysqlite2 import dbapi2 as sqlite3
 
 
 #delete old files
