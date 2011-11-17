@@ -10,7 +10,8 @@ import sys
 import commands
 import os
 import time
-import libvirt
+#import libvirt
+import subprocess
 import re
 import ConfigParser
 
@@ -45,6 +46,7 @@ dbfile=torque_home + "/net/network.db"
 conn=sqlite3.connect(dbfile)
 lockfile=torque_home + "/net/db.lock"
 target_hostfile=torque_home+"/virt/"+jobid
+mempercore=2
 hostname = None
 output_message= '''
 ------------------------------------------------------------------
@@ -75,8 +77,8 @@ def main():
 	ncpus = get_ncpus()
 
 	#create the xml and boot the vm:
-	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus)), get_scratch_disk()))
-
+#	boot_vm(create_xml(target,mac,ncpus,get_memory(int(ncpus)), get_scratch_disk()))
+	boot_vm(uuid,get_memory(int(ncpus)),ncpus,mac,target,get_scratch_disk())
 	# write the job file:
 	write_jobfile(hostname)
 
@@ -95,7 +97,7 @@ def get_ncpus():
 	return '1'
 
 def get_memory(num_cpus):
-	mempercore = config.getint("virt","mempercore")
+#	mempercore = config.getint("virt","mempercore")
 	return str( num_cpus * mempercore * 1048)	
 	
 def get_scratch_in_gb():
@@ -275,14 +277,22 @@ def create_xml(target,mac,ncpus,mem,scratch):
 	return xmldesc
 
 # Boot the vm
-def boot_vm(xmldesc):
-	try:
-		lconn = libvirt.open(None)
-		dom = lconn.createLinux(xmldesc, 0)
-		if dom == None:
-			do_exit_error("Failed to boot VM")
-	except:
-		do_exit_error("Failed to boot VM")	
+def boot_vm(uuid,mem,ncpus,mac,target,scratch):
+#	try:
+		os.system('/usr/sbin/tunctl -t '+uuid+'>/dev/null')
+		os.system('/usr/sbin/brctl addif br0 '+uuid)
+		os.system('/sbin/ifconfig '+uuid+' up')
+  	 	optionstring='-name '+uuid+' -m '+mem+' -smp '+ncpus+' -cpu qemu64 -net nic,macaddr='+mac+',vlan=0,model=virtio -net tap,ifname='+uuid+',vlan=0,script=no,downscript=no  -boot c -drive file='+target+',if=ide,bus=0,unit=0,boot=on,format=qcow2 -drive file='+scratch+',if=ide,bus=0,unit=1,format=qcow2 -balloon virtio -nographic -no-acpi -clock unix'
+		os.system('/usr/libexec/qemu-kvm '+optionstring+'&')
+
+#		lconn = libvirt.open(None)
+#		dom = lconn.createLinux(xmldesc, 0)
+#		if (ret!=0):
+#			do_exit_error("Failed to boot VM")
+#	except:
+#		do_exit_error("Failed to boot VM")	
+
+
     
 
 # write the hostname of the booted vm to a file so that the
@@ -313,9 +323,10 @@ def do_exit():
 
 def do_exit_error( message ):
 	try:
-		lconn = libvirt.open(None)
-		dom = lconn.lookupByName(uuid)
-		dom.destroy()
+		pass
+#		lconn = libvirt.open(None)
+#		dom = lconn.lookupByName(uuid)
+#		dom.destroy()
 	except:
 		pass
 	if hostname:

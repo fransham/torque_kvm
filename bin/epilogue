@@ -8,7 +8,7 @@
 #
 ###########################################
 
-import libvirt
+#import libvirt
 import smtplib
 import os
 import sys
@@ -70,25 +70,27 @@ target_hostfile=torque_home+"/virt/"+jobid
 
 
 #destroy the vm
-conn = libvirt.open(None)
-if conn == None:
-    print 'Failed to open connection to the hypervisor'    
-    sys.exit(1)
+#conn = libvirt.open(None)
+#if conn == None:
+#    print 'Failed to open connection to the hypervisor'    
+#    sys.exit(1)
 
 
 try:
-    dom = conn.lookupByName(uuid)
+    os.system('kill $(ps ax|grep '+uuid+'|grep -v grep|cut -f1 -d " ")')
+    os.system('/sbin/ifconfig '+uuid+' down')
+    os.system('/usr/sbin/tunctl -d '+uuid+'>/dev/null')
 except:
 	# no vm for a baremetal session
 	print '''------------------------------------------------------------------'''
 	sys.exit(0)
 
-if dom.shutdown() != 0:
-    print 'Failed to shutdown domain... destroying'
-    dom.destroy()
+#if dom.shutdown() != 0:
+#    print 'Failed to shutdown domain... destroying'
+#    dom.destroy()
 
-del dom
-del conn
+#del dom
+#del conn
 
 print "  domain " + uuid + " destroyed"
 
