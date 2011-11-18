@@ -75,26 +75,45 @@ class TorqueKvmMonDataConsumer():
             # If this part of the code gets too big, we might break each of the
             # data handling parts into individual classes.  --Andre
             #
-            if key == 'boot_process_start':
+            if key == 'prologue_start':
                 c.execute("""INSERT INTO data SET
                 instance_uuid = %s,
-                vm_image = %s,
-                mac = %s,
-                nic = %s,
+                keyword = %s,
                 ncpus = %s,
-                memory = %s,
-                hostname = %s,
                 user = %s,
-                boot_process_start = FROM_UNIXTIME(%s);""",
+                queue = %s,
+                prologue_start = FROM_UNIXTIME(%s);""",
                           (data['instance_uuid'],
                            data['data'][0],
                            data['data'][1],
                            data['data'][2],
                            data['data'][3],
-                           data['data'][4],
-                           data['data'][5],
-                           data['data'][6],
                            data['timestamp'])
+                          )
+                logging.debug('prologue_start record written to db')
+                
+            elif key == 'epilogue_start':
+                c.execute("""UPDATE data SET epilogue_start = FROM_UNIXTIME(%s) WHERE instance_uuid = %s;""",
+                          (data['timestamp'],
+                           data['instance_uuid'])
+                          )
+                logging.debug('epilogue_start record written to db')
+                
+            elif key == 'boot_process_start':
+                c.execute("""UPDATE data SET
+                vm_image = %s,
+                mac = %s,
+                nic = %s,
+                memory = %s,
+                hostname = %s,
+                boot_process_start = FROM_UNIXTIME(%s) WHERE instance_uuid = %s;""",
+                          (data['data'][0],
+                           data['data'][1],
+                           data['data'][2],
+                           data['data'][3],
+                           data['data'][4],
+                           data['timestamp'],
+                           data['instance_uuid'])
                           )
                 logging.debug('boot_process_start record written to db')
 

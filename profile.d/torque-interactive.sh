@@ -27,18 +27,21 @@ if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ]; then
 				export ALLENVS=${ALLENVS}' -V '$userenv 
 			done
 		#copy the generated nodefile:
-		cp /opt/torque-ltda/hostfiles/${PBS_JOBID} ${HOME}/.torque-ltda/${PBS_JOBID}
+		cp /torque_kvm/${PBS_JOBID} ${HOME}/.torque-ltda/${PBS_JOBID}
 		chmod 644 ${HOME}/.torque-ltda/${PBS_JOBID}
 		export ALLENVS=${ALLENVS}' -V PBS_NODEFILE='${HOME}/.torque-ltda/${PBS_JOBID}
   
-  		# stall to make sure the VM is online:
-  		ssh -o ConnectionAttempts=300 ${TARGET_HOST} "/bin/true"
-
-  		echo "VM is ready. Connecting..."
-  		echo " "
+		# wait for ssh to become alive
+		echo "Waiting for SSH to become alive... "
+		until nc -z ${TARGET_HOST} 22; do
+		    echo -n '.'
+		    sleep 1
+		done
+		echo "Please wait..."
+		sleep 15 # sleep an extra 15s...
 
   		# connect to the VM:
-  		sshenv ${ALLENVS} -q -t ${TARGET_HOST} "/bin/bash -i"
+		sshenv ${ALLENVS} -Y -o ConnectionAttempts=3000 -q -t ${TARGET_HOST} "/bin/bash -i"
 
 		#cleanup
 		rm ${HOME}/.torque-ltda/${PBS_JOBID}

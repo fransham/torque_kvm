@@ -16,6 +16,7 @@ import ConfigParser
 import shutil
 import socket
 import pprint
+import logging
 from torque_kvm_mon import DataReporter
 
 try:
@@ -69,6 +70,7 @@ class PingWaiter(Thread):
 jobid=sys.argv[1]
 userid=sys.argv[2]
 groupid=sys.argv[3]
+jobname=sys.argv[4]
 requested_resources=sys.argv[5]
 queue=sys.argv[6]
 bits=jobid.split('.')
@@ -101,10 +103,14 @@ TORQUE PROLOGUE:
 
 
 def main():
-
+	logging.debug('prologue main() for %s' % (jobid))
+	
 	#check if this is a parallel job, and return the number
 	#of cores the VM should have:
 	ncpus = get_cpus()
+
+	# Report back that the prologue has just started.
+        data_reporter.report_data(vmuuid, 'prologue_start', [get_keyword(),ncpus,userid,queue])
 
 	#get imagepath from keyword and resource info:
 	imagepath = get_image_path(get_keyword())
@@ -124,7 +130,7 @@ def main():
             bridge = config.get("virt", "bridge")
             
 	#create the xml and boot the vm:
-        data_reporter.report_data(vmuuid, 'boot_process_start', [target,mac,bridge,ncpus,get_memory(int(ncpus)), host, userid])
+        data_reporter.report_data(vmuuid, 'boot_process_start', [target,mac,bridge,get_memory(int(ncpus)), host])
 	boot_vm(create_xml(target,mac,bridge,ncpus,get_memory(int(ncpus))), host)
         data_reporter.report_data(vmuuid, 'boot_process_end', None)
         
@@ -133,7 +139,7 @@ def main():
 
 	#cleanup and exit:
 	finalize()
-	
+		
 
 # get keyword:
 def get_keyword():
@@ -295,17 +301,20 @@ def boot_vm(xmldesc, hostname):
 		lconn = libvirt.open(None)
 		dom = lconn.createLinux(xmldesc, 0)
 		if dom == None:
+			logging.error('Failed to boot VM:\n%s' % (xmldesc))
 			do_exit_error("Failed to boot VM")
+		logging.debug('%s' % (dom))
 
-                # Wait for the VM to become online
-                print 'Waiting for VM to become online... Please wait.'
-                pingWaiter = PingWaiter(hostname)
-		pingWaiter.start()
-                pingWaiter.join(5.0*60.0) # 5 minute timeout
-                if pingWaiter.isAlive():
-                    # If we get here, this means that a timeout occurred.
-                    do_exit_error("Failed to boot VM; ping timeout")
-	except:
+                ## Wait for the VM to become online
+                #print 'Waiting for VM to become online... Please wait.'
+                #pingWaiter = PingWaiter(hostname)
+		#pingWaiter.start()
+                #pingWaiter.join(5.0*60.0) # 5 minute timeout
+                #if pingWaiter.isAlive():
+                #    # If we get here, this means that a timeout occurred.
+                #    do_exit_error("Failed to boot VM; ping timeout")
+	except Exception, e:
+		logging.error('Failed to boot VM\n%s' % (e))
 		do_exit_error("Failed to boot VM")	
     
 
@@ -321,6 +330,8 @@ def write_jobfiles(host,ncpus,mpi_flavor):
 
         if mpi_flavor is None or mpi_flavor == 'openmpi':
             jobfile2.write(host+' slots='+ncpus+'\n')
+        elif mpi_flavor == 'openmpi_old':
+            jobfile2.write('%s\n' % (host))
         elif mpi_flavor == 'mpich':
             jobfile2.write('%s:%s\n' % (host, ncpus))
         else:
@@ -346,6 +357,7 @@ def release_db_lock():
 
 def do_exit():
 	print output_message
+        logging.debug('prologue do_exit() for %s' % (jobid))
 	sys.exit(0)
 
 def do_exit_error( message ):
@@ -370,6 +382,7 @@ def do_exit_error( message ):
 
 if __name__ == "__main__":
 	try:
+		logging.basicConfig(filename='/var/log/torque_prologue.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
 		main()
 	except  KeyboardInterrupt:
 		do_exit_error("Prologue interrupted")

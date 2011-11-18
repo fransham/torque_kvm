@@ -1,0 +1,17 @@
+#!/usr/local/bin/python2.7
+
+import cgi
+import cgitb
+import sys
+import os
+
+cgitb.enable()
+
+print "Content-Type: text/html"     # HTML is following
+print                               # blank line, end of headers
+
+cgi.print_environ()
+cgi.print_environ_usage()
+
+
+sys.exit(0)

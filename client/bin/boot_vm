@@ -1,0 +1,49 @@
+#!/usr/local/bin/python2.7
+
+import sys
+import os
+import argparse
+import subprocess
+import ConfigParser
+
+class VmBooter():
+    def __init__(self):
+        pass
+
+    def boot_interactive(self, vm, cores):
+        qsub_args = ['qsub',	
+            '-l other=%s' % (vm),
+            '-l nodes=1:ppn=%d' % (cores),
+            '-X', '-I']
+        os.execvp('qsub', qsub_args)
+
+class ListVMsAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        config = ConfigParser.ConfigParser()
+        config.read('/torque_kvm/torque-kvm.conf')
+        rules = config.get('resources','map').split(';')
+        vms = []
+        for rule in rules:
+            if len(rule) > 0:
+                vm = rule.strip().split(' ')[1]
+                if vm != '%' and vm != 'baremetal':
+                    vms.append(vm)
+        for vm in sorted(vms):
+            print vm
+	sys.exit(0)
+
+            
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('vm', help='the name of the VM to boot')
+    parser.add_argument('cores', type = int, help = 'the number of cores to assign to the VM')
+    parser.add_argument('-l', nargs = 0, action=ListVMsAction, help='list available VMs')
+    parser.add_argument('-v', action='store_true', default=False,
+                        dest='verbose',
+                        help='show verbose output')
+        
+    args = parser.parse_args()
+
+    VmBooter().boot_interactive(args.vm, args.cores)
+    sys.exit(0)
+

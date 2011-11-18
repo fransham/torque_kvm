@@ -1,0 +1,26 @@
+#!/usr/local/bin/python2.7
+
+import cgi
+import cgitb
+import sys
+import subprocess
+import re
+
+
+qstat_output = subprocess.check_output(["/usr/local/torque-2.5.5/bin/qstat", "-q"])
+
+m = re.search('^\s+(\d+)\s+(\d+)\s+$', qstat_output, flags=re.MULTILINE)
+num_of_running_jobs = m.group(1)
+num_of_queued_jobs = m.group(2)
+
+cgitb.enable()
+
+print "Content-Type: text/html"     # HTML is following
+print                               # blank line, end of headers
+
+print '%s running jobs; %s queued jobs' % (num_of_running_jobs, num_of_queued_jobs)
+
+sys.exit(0)
+
+
+

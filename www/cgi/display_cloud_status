@@ -1,0 +1,22 @@
+#!/usr/local/bin/python2.7
+
+import cgi
+import cgitb
+import sys
+import datetime
+
+cgitb.enable()
+
+print "Content-Type: text/html"     # HTML is following
+print                               # blank line, end of headers
+
+# The cloud status is read from '/etc/cloud/status'
+status = ''
+try:
+	status = open('/etc/cloud/status').read()
+except:
+	status = '(Unknown)'
+
+print status
+
+sys.exit(0)

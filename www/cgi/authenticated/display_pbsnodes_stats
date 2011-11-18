@@ -1,0 +1,173 @@
+#!/usr/local/bin/python2.7
+
+import cgi
+import cgitb
+from xml.dom.minidom import parse, parseString
+import os
+import sys
+import subprocess
+
+
+def getText(nodelist):
+    rc = []
+    for node in nodelist:
+        if node.nodeType == node.TEXT_NODE:
+            rc.append(node.data)
+    return ''.join(rc)
+
+def user_has_role(user, role):
+    for line in open('/etc/neptune.sao.nrc.ca/htgroup'):
+        r = line.strip().split(':')[0]
+        if r == role:
+            users = line.strip().split(':')[1].split(',')
+            return user in users
+    return False
+
+def node_to_html(node):
+    if node.nodeType == node.ELEMENT_NODE:
+        html ='<tr>'
+        html += '<td><b>%s</b></td>' % (node.localName)
+
+        html += '<td>'
+        if node.hasChildNodes() and node.childNodes[0].nodeType == node.TEXT_NODE:
+            html += node.childNodes[0].data
+        elif node.hasChildNodes():
+            html += '<table border=1>'
+            for child_node in node.childNodes:
+                html += '%s' % (node_to_html(child_node))
+            html += '</table>'
+        html += '</td>'
+        
+        html += '</tr>'
+        return html
+
+
+cgitb.enable()
+    
+# Get unix user from Drupal user
+username_mapping = {}
+for line in open('/etc/neptune.sao.nrc.ca/drupal-to-unix.mapping'):
+    username_mapping[line.split(':')[0]] = line.split(':')[1]
+
+if not 'REMOTE_USER' in os.environ:
+    print "Content-Type: text/html"     # HTML is following
+    print                               # blank line, end of headers
+    print "This feature requires user authentication."
+    sys.exit(0)
+
+remote_user = os.environ['REMOTE_USER']
+
+if remote_user not in username_mapping:
+    print "Content-Type: text/html"     # HTML is following
+    print                               # blank line, end of headers
+    print "You are not authorized to access this data."
+    sys.exit(0)
+
+print "Content-Type: text/html"     # HTML is following
+print                               # blank line, end of headers
+
+
+# Make sure the authenticated user is part of the pbs_admin group.
+if not user_has_role(remote_user, 'pbs_admin'):
+    print 'You do not have permission to view this information.'
+    sys.exit(0)
+
+
+
+    
+pbsnodes_output = subprocess.check_output(["/usr/local/torque-2.5.5/bin/pbsnodes", "-x"])
+dom = parseString(pbsnodes_output)
+pbs_nodes = {}
+for pbs_node in dom.getElementsByTagName("Node"):
+    node_name = getText(pbs_node.getElementsByTagName("name")[0].childNodes)
+    pbs_nodes[node_name] = {}
+    pbs_nodes[node_name]['state'] = getText(pbs_node.getElementsByTagName("state")[0].childNodes)
+    pbs_nodes[node_name]['ntype'] = getText(pbs_node.getElementsByTagName("ntype")[0].childNodes)
+    pbs_nodes[node_name]['np'] = getText(pbs_node.getElementsByTagName("np")[0].childNodes)
+    pbs_nodes[node_name]['gpus'] = getText(pbs_node.getElementsByTagName("gpus")[0].childNodes)
+    pbs_nodes[node_name]['jobs'] = None
+    if len(pbs_node.getElementsByTagName("jobs")) > 0:
+        pbs_nodes[node_name]['jobs'] = getText(pbs_node.getElementsByTagName("jobs")[0].childNodes)
+    pbs_nodes[node_name]['status'] = getText(pbs_node.getElementsByTagName("status")[0].childNodes)
+
+
+
+
+form = cgi.FieldStorage()
+if 'node_name' in form:
+    node_name = form['node_name'].value
+    if not node_name in pbs_nodes:
+        print 'Node information not found.'
+        sys.exit(0)
+        
+    print '<h2>%s</h2>' % (node_name)
+    print '<table>'
+    print '<tr>'
+    print '<td><b>%s</b></td>' % ('state')
+    print '<td>%s</td>' % (pbs_nodes[node_name]['state'])
+    print '</tr>'
+    print '<tr>'
+    print '<td><b>%s</b></td>' % ('np')
+    print '<td>%s</td>' % (pbs_nodes[node_name]['np'])
+    print '</tr>'
+    print '<tr>'
+    print '<td><b>%s</b></td>' % ('gpus')
+    print '<td>%s</td>' % (pbs_nodes[node_name]['gpus'])
+    print '</tr>'
+    print '<tr>'
+    print '<td><b>%s</b></td>' % ('ntype')
+    print '<td>%s</td>' % (pbs_nodes[node_name]['ntype'])
+    print '</tr>'
+    print '<tr>'
+    print '<td><b>%s</b></td>' % ('jobs')
+    if pbs_nodes[node_name]['jobs'] == None:
+        print '<td>(no jobs)</td>'
+    else:
+        print '<td><ul>'
+        for job in pbs_nodes[node_name]['jobs'].strip().split(','):
+            print """<li><button style="border:none; background:transparent; cursor: pointer;" onclick="jQuery.get('https://neptune.sao.nrc.ca/cloud/cgi-auth/display_torque_stats?job_id=%s', function( data ) {jQuery('#pbsnodes_stats').html( data );});">%s</button></li>""" % (job.split('/')[1], job)
+        print '</ul></td>'
+    print '</tr>'
+    print '<tr>'
+    print '<td><b>%s</b></td>' % ('status')
+    print '<td><table>'
+    for attr in pbs_nodes[node_name]['status'].split(','):
+        print '<tr><td><b>%s</b></td><td>%s</td></tr>' % (attr.split('=')[0], attr.split('=')[1])
+    print '</table></td>'
+
+    print '</tr>'
+    print '</table>'
+
+else:
+
+    if len(pbs_nodes) == 0:
+        print 'No nodes are currently online.'
+    else:
+        print '<table>'
+        print '<tr>'
+        print '<th>Name</th>'
+        print '<th>np</th>'
+        print '<th>gpus</th>'
+        print '<th>State</th>'
+        print '<th># of running jobs</th>'
+        print '</tr>'
+
+        for node_name in sorted(pbs_nodes.keys()):
+            print '<tr>'
+            print """<td><button style="border:none; background:transparent; cursor: pointer;" onclick="jQuery.get('https://neptune.sao.nrc.ca/cloud/cgi-auth/display_pbsnodes_stats?node_name=%s', function( data ) {jQuery('#pbsnodes_stats').html( data );});">%s</button></td>""" % (node_name, node_name)
+            print '<td>%s</td>' % pbs_nodes[node_name]['np']
+            print '<td>%s</td>' % pbs_nodes[node_name]['gpus']
+            print '<td>%s</td>' % pbs_nodes[node_name]['state']
+            if pbs_nodes[node_name]['jobs'] == None:
+                print '<td>0</td>'
+            else:
+                print '<td>%s</td>' % len(pbs_nodes[node_name]['jobs'].split(','))
+            print '</tr>'
+
+        print '</table>'
+
+
+sys.exit(0)
+
+
+

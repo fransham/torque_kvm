@@ -68,10 +68,9 @@ TORQUE EPILOGUE:
 bits=jobid.split('.')
 vmuuid='vm-'+bits[0]
 target_hostfile=torque_home+"/virt/"+jobid
-
+data_reporter.report_data(vmuuid, 'epilogue_start', None)
 
 #destroy the vm
-data_reporter.report_data(vmuuid, 'shutdown_process_start', None)
 conn = libvirt.open(None)
 if conn == None:
     print 'Failed to open connection to the hypervisor'    
@@ -85,6 +84,7 @@ except:
 	print '''------------------------------------------------------------------'''
 	sys.exit(0)
 
+data_reporter.report_data(vmuuid, 'shutdown_process_start', None)
 if dom.shutdown() != 0:
     print 'Failed to shutdown domain... destroying'
     dom.destroy()

@@ -10,12 +10,13 @@
 #
 #################################################################
 
+import os
 import re
 import sys
 from optparse import OptionParser
 
 #where did you install torque?
-torque_home="/var/spool/torque"
+torque_home=os.environ['TORQUE_HOME']
 
 #customize any system defaults you want in here.
 #memory should be small, since all it's doing is running ssh
@@ -45,6 +46,13 @@ def main():
     
     #get the user's job script from STDIN
     data = sys.stdin.readlines()
+
+    # This bit of code here allows users to submit jobs
+    # that should not be filtered (kept as is) by making the
+    # first line '##NO_FILTER'.
+    if data is not None and data[0].strip() == '##NO_FILTER':
+        sys.stdout.writelines(data[1:])
+        sys.exit(0)
     
     #apply the filters to the #PBS directives
     userjob = apply_filters(data)
@@ -166,7 +174,7 @@ def write_job(userjob):
     #stall to make sure the VM has come online.  If it's not online after
     #5 mins, it's probably not coming up.
     #When it's alive, run the job in the proper environement.  
-	print 'cp /opt/torque-ltda/hostfiles/$PBS_JOBID ${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
+	print 'cp /torque_kvm/$PBS_JOBID ${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
 	print 'chmod 644 ${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
 	print 'export ALLENVS=${ALLENVS}\' -V  \'PBS_NODEFILE=${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
 	print 'sshenv ${ALLENVS} -q -o ConnectionAttempts=300 ${TARGET_HOST} ${TARGET_SCRIPT}'
@@ -177,7 +185,7 @@ def write_job(userjob):
 
     #cleanup the job script
 	print 'rm $TARGET_SCRIPT'
-	print 'rm ${HOME}/.torque-ltda/${PBS_JOBID}'
+	print 'rm ${HOME}/.torque-ltda/${PBS_JOBID}.hosts'
     
 if __name__ == "__main__":
     main()
