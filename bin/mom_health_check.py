@@ -83,7 +83,7 @@ def get_running_jobs():
 	# get the number of the running job:	
 	for job in joblist.split(' '):
 		parts = job.split('.')
-		uuids.append(parts[0])
+		uuids.append(int(parts[0]))
 		
 	return uuids
 	
