@@ -56,7 +56,7 @@ def get_database_entries():
 	try:
 		while 1:
 			(host,ip,mac,inuse) = c.next()
-			uuids.add(inuse)
+			uuids.append(inuse)
 	except StopIteration:
 		pass;
 		
