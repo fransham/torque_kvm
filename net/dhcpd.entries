@@ -1,0 +1,90 @@
+host vm001.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:01;
+ fixed-address 10.60.100.1;
+ option host-name "vm001.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm002.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:02;
+ fixed-address 10.60.100.2;
+ option host-name "vm002.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm003.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:03;
+ fixed-address 10.60.100.3;
+ option host-name "vm003.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm004.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:04;
+ fixed-address 10.60.100.4;
+ option host-name "vm004.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm005.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:05;
+ fixed-address 10.60.100.5;
+ option host-name "vm005.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm006.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:06;
+ fixed-address 10.60.100.6;
+ option host-name "vm006.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm007.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:07;
+ fixed-address 10.60.100.7;
+ option host-name "vm007.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm008.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:08;
+ fixed-address 10.60.100.8;
+ option host-name "vm008.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm009.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:09;
+ fixed-address 10.60.100.9;
+ option host-name "vm009.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
+host vm010.neptune.rcsg {
+ hardware ethernet 52:54:00:00:00:10;
+ fixed-address 10.60.100.10;
+ option host-name "vm010.neptune.rcsg";
+ option subnet-mask 255.255.252.0;
+ option routers 172.23.128.1;
+ option broadcast-address 172.23.255.255;
+ option domain-name-servers 172.23.136.8;
+}
