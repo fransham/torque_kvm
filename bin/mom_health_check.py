@@ -100,7 +100,7 @@ def compare_running_to_db(running, indb):
 		#if we're executing the following code, it's to fix a problem.
 		#let's keep a record of what we fixed...
 		recordfile = open(torque_home + "/net/jobs_fixed.log", 'a');
-		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S '))
+		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S '))
 		recordfile.write(" "+dbentry+"\n")
 		recordfile.close()
 		
