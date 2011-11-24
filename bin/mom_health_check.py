@@ -101,7 +101,7 @@ def compare_running_to_db(running, indb):
 		#let's keep a record of what we fixed...
 		recordfile = open(torque_home + "/net/jobs_fixed.log", 'a');
 		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S '))
-		recordfile.write(" "+jobnum+"\n")
+		recordfile.write(" "+dbentry+"\n")
 		recordfile.close()
 		
 		#now remove the entry from the database, and be done with it!
