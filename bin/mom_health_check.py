@@ -11,6 +11,7 @@
 import libvirt
 import commands
 import smtplib
+import ConfigParser
 
 try:
     import sqlite3
@@ -42,7 +43,7 @@ def get_running_vms():
 		ids = lconn.listDomainsID();
 		domains = []
 		for id in ids:
-			domains.append(libvirt.getName(libvirt.lookupByID(lconn, id))
+			domains.append(libvirt.getName(libvirt.lookupByID(lconn, id)))
 		return domains
 	except:
 		return []
@@ -50,23 +51,22 @@ def get_running_vms():
 def get_database_entries():
 	global conn
 	c=conn.cursor()
-	c.execute('select * from reservations where inuse <> 0')
-	c.close()
-	
+	c.execute('select * from reservations where inuse <> 0')	
 	uuids = []
 	try:
-		while:
+		while 1:
 			(host,ip,mac,inuse) = c.next()
 			uuids.add(inuse)
 	except StopIteration:
 		pass;
-	
+		
+	c.close()	
 	return uuids
 	
 def get_running_jobs():
 	(ret, running_jobs) = commands.getstatusoutput('momctl -q jobs')
 	if (ret != 0):
-		print "cannot query torque for jobs")
+		print "cannot query torque for jobs"
 		sys.exit(1)
 	
 	#strip off the leading text: "   localhost:         jobs = 'jobs="
@@ -79,7 +79,7 @@ def get_running_jobs():
 	uuids = []
 	
 	# get the number of the running job:	
-	foreach(job in job_list.split(' ')):
+	for job in job_list.split(' '):
 		parts = job.split('.')
 		uuids.append(parts[0])
 		
@@ -100,7 +100,7 @@ def compare_running_to_db(running, indb):
 		#let's keep a record of what we fixed...
 		recordfile = open(torque_home + "/net/jobs_fixed.log", 'a');
 		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S '))
-		recordfile.write(" "+jobnum)+"\n")
+		recordfile.write(" "+jobnum+"\n")
 		recordfile.close()
 		
 		#now remove the entry from the database, and be done with it!
