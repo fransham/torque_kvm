@@ -109,3 +109,8 @@ def compare_running_to_db(running, indb):
 		c.execute("update reservations set inuse=0 where inuse=?",[jobnumber])
 		conn.commit()
 		c.close()
+		
+		
+# Run the main program
+if __name__ == "__main__":
+	main()
