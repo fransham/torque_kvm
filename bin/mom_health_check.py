@@ -13,6 +13,7 @@ import commands
 import smtplib
 import ConfigParser
 import re
+import datetime
 
 try:
     import sqlite3
@@ -100,14 +101,19 @@ def compare_running_to_db(running, indb):
 		#if we're executing the following code, it's to fix a problem.
 		#let's keep a record of what we fixed...
 		recordfile = open(torque_home + "/net/jobs_fixed.log", 'a');
+<<<<<<< HEAD
 		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S '))
 		recordfile.write(" "+dbentry+"\n")
+=======
+		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S '))
+		recordfile.write(" "+str(dbentry)+"\n")
+>>>>>>> 25e80c1fe3df1d7c82d1d719385c569db62e4c2c
 		recordfile.close()
 		
 		#now remove the entry from the database, and be done with it!
 		global conn
 		c=conn.cursor()
-		c.execute("update reservations set inuse=0 where inuse=?",[jobnumber])
+		c.execute("update reservations set inuse=0 where inuse=?",[dbentry])
 		conn.commit()
 		c.close()
 		
