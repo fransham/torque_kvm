@@ -12,6 +12,7 @@ import libvirt
 import commands
 import smtplib
 import ConfigParser
+import re
 
 try:
     import sqlite3
