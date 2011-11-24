@@ -108,7 +108,7 @@ def compare_running_to_db(running, indb):
 		#now remove the entry from the database, and be done with it!
 		global conn
 		c=conn.cursor()
-		c.execute("update reservations set inuse=0 where inuse=?",[jobnumber])
+		c.execute("update reservations set inuse=0 where inuse=?",[dbentry])
 		conn.commit()
 		c.close()
 		
