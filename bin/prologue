@@ -35,7 +35,8 @@ groupid=sys.argv[3]
 requested_resources=sys.argv[5]
 queue=sys.argv[6]
 bits=jobid.split('.')
-uuid='vm-'+bits[0]
+jobnum = bits[0]
+uuid='vm-'+jobnum
 
 #parameters and global variables
 config = ConfigParser.ConfigParser()
@@ -189,7 +190,7 @@ def get_host_mac():
 		do_exit_error( "no free network slots!" )
 
 	# update the db
-	c.execute("update reservations set inuse = 1 where hostname=?",[host])
+	c.execute("update reservations set inuse = ? where hostname=?",[jobnum, host])
 	conn.commit()
 	c.close()
 

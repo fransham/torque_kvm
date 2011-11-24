@@ -10,6 +10,7 @@
 
 import libvirt
 import commands
+import smtplib
 
 try:
     import sqlite3
@@ -42,8 +43,9 @@ def get_running_vms():
 		domains = []
 		for id in ids:
 			domains.append(libvirt.getName(libvirt.lookupByID(lconn, id))
+		return domains
 	except:
-		pass 
+		return []
 
 def get_database_entries():
 	global conn
@@ -94,7 +96,14 @@ def compare_running_to_db(running, indb):
 		if dbentry in running:
 			continue
 			
-		#if we're executing the following code, it's to fix a problem...
+		#if we're executing the following code, it's to fix a problem.
+		#let's keep a record of what we fixed...
+		recordfile = open(torque_home + "/net/jobs_fixed.log", 'a');
+		recordfile.write(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S '))
+		recordfile.write(" "+jobnum)+"\n")
+		recordfile.close()
+		
+		#now remove the entry from the database, and be done with it!
 		global conn
 		c=conn.cursor()
 		c.execute("update reservations set inuse=0 where inuse=?",[jobnumber])
