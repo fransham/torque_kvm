@@ -71,69 +71,75 @@ print                               # blank line, end of headers
 if 'job_id' in form:
     job_id = form['job_id'].value
     qstat_output = subprocess.check_output(["/usr/local/torque-2.5.5/bin/qstat", "-x", job_id])
-    dom = parseString(qstat_output)
-    job = dom.getElementsByTagName("Job")[0]
-    job_owner = getText(job.getElementsByTagName("Job_Owner")[0].childNodes)
-    if not user_has_role(remote_user, 'pbs_admin') or job_owner == '%s@neptune.sao.nrc.ca' % username_mapping[remote_user]:
-        print 'You do not have permission to view information about this job.'
+    if qstat_output == '':
+        print 'The job %s does not exist on the server.' % (job_id)
     else:
-        print '<table border=1>%s</table>' % (node_to_html(job))
+        dom = parseString(qstat_output)
+        job = dom.getElementsByTagName("Job")[0]
+        job_owner = getText(job.getElementsByTagName("Job_Owner")[0].childNodes)
+        if not user_has_role(remote_user, 'pbs_admin') or job_owner == '%s@neptune.sao.nrc.ca' % username_mapping[remote_user]:
+            print 'You do not have permission to view information about this job.'
+        else:
+            print '<table border=1>%s</table>' % (node_to_html(job))
         
    
 
 else:
     qstat_output = subprocess.check_output(["/usr/local/torque-2.5.5/bin/qstat", "-x"])
-    dom = parseString(qstat_output)
-
-    jobs = {}
-
-    num_of_queued_jobs = 0
-    num_of_running_jobs = 0
-    for job in dom.getElementsByTagName("Job"):
-        job_id = getText(job.getElementsByTagName("Job_Id")[0].childNodes)
-        job_name = getText(job.getElementsByTagName("Job_Name")[0].childNodes)
-        job_owner = getText(job.getElementsByTagName("Job_Owner")[0].childNodes)
-        job_queue = getText(job.getElementsByTagName("queue")[0].childNodes)
-        job_state = getText(job.getElementsByTagName("job_state")[0].childNodes)
-        job_walltime = getText(job.getElementsByTagName("walltime")[0].childNodes)
-	# TODO:
-        # put code here to extract submission (queued) time and start time
-
-        if user_has_role(remote_user, 'pbs_admin') or job_owner == '%s@neptune.sao.nrc.ca' % username_mapping[remote_user]:
-            jobs[job_id] = {}
-            jobs[job_id]['name'] = job_name
-            jobs[job_id]['owner'] = job_owner
-            jobs[job_id]['queue'] = job_queue
-            jobs[job_id]['state'] = job_state
-            jobs[job_id]['walltime'] = job_walltime
-
-
-
-    if len(jobs) == 0:
-        print 'You currently have no jobs on this server.'
+    
+    if qstat_output == '':
+        print 'No job currently exist on the server.'
     else:
-        print '<table>'
-        print '<tr>'
-        print '<th>ID</th>'
-        print '<th>Name</th>'
-        print '<th>Owner</th>'
-        print '<th>Queue</th>'
-        print '<th>Walltime</th>'
-        print '<th>State</th>'
-        print '</tr>'
+        dom = parseString(qstat_output)
 
-        for job_id in sorted(jobs.keys()):
+        jobs = {}
+
+        num_of_queued_jobs = 0
+        num_of_running_jobs = 0
+        for job in dom.getElementsByTagName("Job"):
+            job_id = getText(job.getElementsByTagName("Job_Id")[0].childNodes)
+            job_name = getText(job.getElementsByTagName("Job_Name")[0].childNodes)
+            job_owner = getText(job.getElementsByTagName("Job_Owner")[0].childNodes)
+            job_queue = getText(job.getElementsByTagName("queue")[0].childNodes)
+            job_state = getText(job.getElementsByTagName("job_state")[0].childNodes)
+            job_walltime = getText(job.getElementsByTagName("walltime")[0].childNodes)
+            # TODO:
+            # put code here to extract submission (queued) time and start time
+
+            if user_has_role(remote_user, 'pbs_admin') or job_owner == '%s@neptune.sao.nrc.ca' % username_mapping[remote_user]:
+                jobs[job_id] = {}
+                jobs[job_id]['name'] = job_name
+                jobs[job_id]['owner'] = job_owner
+                jobs[job_id]['queue'] = job_queue
+                jobs[job_id]['state'] = job_state
+                jobs[job_id]['walltime'] = job_walltime
+
+
+
+        if len(jobs) == 0:
+            print 'You currently have no jobs on this server.'
+        else:
+            print '<table>'
             print '<tr>'
-            print """<td><button style="border:none; background:transparent; cursor: pointer;" onclick="jQuery.get('https://neptune.sao.nrc.ca/cloud/cgi-auth/display_torque_stats?job_id=%s', function( data ) {jQuery('#torque_stats').html( data );});">%s</button></td>""" % (job_id, job_id)
-            print '<td>%s</td>' % jobs[job_id]['name']
-            print '<td>%s</td>' % jobs[job_id]['owner']
-            print '<td>%s</td>' % jobs[job_id]['queue']
-            print '<td>%s</td>' % jobs[job_id]['walltime']
-            print '<td>%s</td>' % jobs[job_id]['state']
+            print '<th>ID</th>'
+            print '<th>Name</th>'
+            print '<th>Owner</th>'
+            print '<th>Queue</th>'
+            print '<th>Walltime</th>'
+            print '<th>State</th>'
             print '</tr>'
-        print '</table>'
 
-    #cgi.print_environ()
+            for job_id in sorted(jobs.keys()):
+                print '<tr>'
+                print """<td><button style="border:none; background:transparent; cursor: pointer;" onclick="jQuery.get('https://neptune.sao.nrc.ca/cloud/cgi-auth/display_torque_stats?job_id=%s', function( data ) {jQuery('#torque_stats').html( data );});">%s</button></td>""" % (job_id, job_id)
+                print '<td>%s</td>' % jobs[job_id]['name']
+                print '<td>%s</td>' % jobs[job_id]['owner']
+                print '<td>%s</td>' % jobs[job_id]['queue']
+                print '<td>%s</td>' % jobs[job_id]['walltime']
+                print '<td>%s</td>' % jobs[job_id]['state']
+                print '</tr>'
+            print '</table>'
+
 
 sys.exit(0)
 
