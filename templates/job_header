@@ -1,0 +1,10 @@
+------------------------------------------------------------------------
+TORQUE PROLOGUE:
+  jobid:               @!jobid!@
+  userid:              @!userid!@
+  requested resources: @!requested_resources!@
+  queue:               @!queue!@
+  host:			       @!hostname!@
+  sessiontype:         @!sessiontype!@
+  imagefile: 		   @!imagefile!@
+------------------------------------------------------------------------

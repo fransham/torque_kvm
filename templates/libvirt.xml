@@ -1,0 +1,33 @@
+<domain type='kvm'>
+  <name>@!uuid!@</name>
+  <memory>@!mem!@</memory>
+  <vcpu>@!ncpus!@</vcpu>
+  <os>
+    <type arch='i686'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <devices>
+    <emulator>/usr/libexec/qemu-kvm</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='@!target!@'/>
+      <target dev='hda'/>
+    </disk>
+	<!--(if scratch != None)-->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='@!scratch!@'/>
+      <target dev='hdb'/>
+    </disk>
+    <!--(end)-->
+    <interface type='bridge'>
+      <mac address='@!mac!@'/>
+      <source bridge='@!bridge!@'/>
+      <target dev='@!uuid!@-0'/>
+      <model type='virtio'/>
+    </interface>
+  </devices>
+  <cpu match='minimum'>
+	<model>qemu32</model>
+  </cpu>
+</domain>
