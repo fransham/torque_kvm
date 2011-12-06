@@ -49,7 +49,7 @@ form = cgi.FieldStorage()
 # Get unix user from Drupal user
 username_mapping = {}
 for line in open('/etc/neptune.sao.nrc.ca/drupal-to-unix.mapping'):
-    username_mapping[line.split(':')[0]] = line.split(':')[1]
+    username_mapping[line.split(':')[0]] = line.split(':')[1].strip()
 
 if not 'REMOTE_USER' in os.environ:
     print "Content-Type: text/html"     # HTML is following
