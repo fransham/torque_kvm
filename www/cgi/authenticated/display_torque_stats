@@ -102,7 +102,9 @@ else:
             job_owner = getText(job.getElementsByTagName("Job_Owner")[0].childNodes)
             job_queue = getText(job.getElementsByTagName("queue")[0].childNodes)
             job_state = getText(job.getElementsByTagName("job_state")[0].childNodes)
-            job_walltime = getText(job.getElementsByTagName("walltime")[0].childNodes)
+            job_walltime = ''
+            if(job.getElementsByTagName("walltime").length > 0):
+                job_walltime = getText(job.getElementsByTagName("walltime")[0].childNodes)
             # TODO:
             # put code here to extract submission (queued) time and start time
 
