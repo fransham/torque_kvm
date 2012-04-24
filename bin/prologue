@@ -286,6 +286,11 @@ def create_xml(target,mac,bridge,ncpus,mem):
     <type>hvm</type>
     <boot dev='hd'/>
   </os>
+  <features>
+    <pae/>
+    <acpi/>
+    <apic/>
+  </features>
   <devices>
     <emulator>/usr/libexec/qemu-kvm</emulator>
     <disk type='file' device='disk'>
