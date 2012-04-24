@@ -268,10 +268,20 @@ def get_host_mac():
 
 # create the libvirt xml for our domain
 def create_xml(target,mac,bridge,ncpus,mem):
-	xmldesc="""<domain type='kvm'>
+    cpu_config = ''
+    if config.has_option('virt','cpu_config'):
+        try:
+            cpu_config_file = config.get('virt','cpu_config')
+            cpu_config = open(cpu_config_file).read()
+        except Exeption as e:
+            logging.warn('Could not read cpu config from %s.  No cpu definition added to the domain definition file.' % (cpu_config_file))
+            cpu_config = ''
+    
+    xmldesc="""<domain type='kvm'>
   <name>"""+vmuuid+"""</name>
   <memory>"""+mem+"""</memory>
   <vcpu>"""+ncpus+"""</vcpu>
+  """+cpu_config+"""
   <os>
     <type>hvm</type>
     <boot dev='hd'/>
@@ -291,9 +301,8 @@ def create_xml(target,mac,bridge,ncpus,mem):
     </interface>
   </devices>
 </domain>
-
 """
-	return xmldesc
+    return xmldesc
 
 # Boot the vm
 def boot_vm(xmldesc, hostname):
