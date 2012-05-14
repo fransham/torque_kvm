@@ -248,7 +248,27 @@ def get_host_mac():
 	c.execute('select * from reservations where inuse = 0')
 
 	try:
-		(host,ip,mac,inuse) = c.next()
+                found_mac = False
+                while found_mac == False:
+                    (host,ip,mac,inuse) = c.next()
+                    found_mac = True
+
+                    # Test if IP address is currently used (via arping command)
+                    # This test is optional and configurable via the config file.
+                    if config.has_option('net', 'check_ip_duplicates') and config.get('net', 'check_ip_duplicates').lower() == 'true':
+                        logging.debug('Detecting duplicates for %s' % (ip))
+                        try:
+                            subprocess.check_call("/sbin/arping -D -c 2 %s" % (ip), shell=True)
+                        except subprocess.CalledProcessError, e:
+                            if e.returncode == 1:
+                                logging.warn('IP duplicate found for %s' % (ip))
+                                found_mac = False
+                            else:
+                                logging.error('Error during IP duplicate test.  arping returned %d' % (e.returncode))
+                                
+                        if found_mac == True:
+                            logging.debug('IP %s OK' % (ip))
+                
 	except StopIteration:
 		do_exit_error( "no free network slots!" )
 
