@@ -80,19 +80,29 @@ if conn == None:
 try:
     dom = conn.lookupByName(vmuuid)
 except:
-	# no vm for a baremetal session
-	print '''------------------------------------------------------------------'''
-	sys.exit(0)
+    # no vm for a baremetal session
+    print '''------------------------------------------------------------------'''
+    sys.exit(0)
 
 data_reporter.report_data(vmuuid, 'shutdown_process_start', None)
-if dom.shutdown() != 0:
-    print 'Failed to shutdown domain... destroying'
-    dom.destroy()
+#if dom.shutdown() != 0:
+#    print 'Failed to shutdown domain... destroying'
+dom.destroy()
 
 del dom
 del conn
 
-print "  domain " + vmuuid + " destroyed"
+
+#try:
+#    data_reporter.report_data(vmuuid, 'shutdown_process_start', None)
+#    os.system('kill $(ps ax|grep '+uuid+'|grep -v grep|cut -f1 -d " ")')
+#    os.system('/sbin/ifconfig '+uuid+' down')
+#    os.system('/usr/sbin/tunctl -d '+uuid+'>/dev/null')
+#except:
+#    # no vm for a baremetal session
+#    print '''------------------------------------------------------------------'''
+#    sys.exit(0)
+#    print "  domain " + vmuuid + " destroyed"
 
 #get the entry from the host file
 host = open(target_hostfile,'r').read()
@@ -100,7 +110,7 @@ host = open(target_hostfile,'r').read()
 #add the entry back into the db
 conn=sqlite3.connect(dbfile)
 c=conn.cursor()
-c.execute("update reservations set inuse = 0 where hostname=?",[host])
+c.execute("update reservations set inuse = 0, job = NULL where hostname=?",[host])
 conn.commit()
 c.close()
 

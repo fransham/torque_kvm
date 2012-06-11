@@ -51,7 +51,7 @@ except OSError:
 conn = sqlite3.connect(dbfile)
 c = conn.cursor()
 c.execute('''create table reservations
-(hostname text, ipaddr text, macaddr text, inuse integer)''')
+(hostname text, ipaddr text, macaddr text, inuse integer, job text)''')
 
 outfile = open(dhcpfile,'w')
 
