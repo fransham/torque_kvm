@@ -1,0 +1,51 @@
+#!/usr/local/bin/python2.7
+
+###########################################
+#
+#  This utility script implements a command
+#  that the users can use to find which
+#  VM is running a particular PBS job.
+#
+###########################################
+
+import os
+import sys
+import re
+
+try:
+    import sqlite3
+except:
+    from pysqlite2 import dbapi2 as sqlite3
+
+dbfile="/torque_kvm/net/network.db"
+output_format = '%s : %s'
+
+if (len(sys.argv) == 2) and (sys.argv[1] == '-h'):
+    print 'Usage: %s [jobid [, jobid ...]]' % (sys.argv[0])
+    sys.exit(-1)
+
+
+conn = None
+try:
+    conn=sqlite3.connect(dbfile)
+    if len(sys.argv) == 1:
+        c = conn.cursor()
+        for row in c.execute("SELECT job, hostname FROM reservations WHERE job IS NOT NULL"):
+            print output_format % (row[0], row[1])
+        c.close()
+    else:
+        for jobid in sys.argv[1:]:
+            c = conn.cursor()
+            c.execute("SELECT hostname FROM reservations WHERE job=?",[jobid])
+            data = c.fetchone()
+            if not data:
+                data = '(not found)'
+            print output_format % (jobid, data[0])
+            c.close()
+except Exception as e:
+    print 'Error: %s' % (e)
+    sys.exit(-1)
+finally:
+    conn.close()
+
+    
